@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="An example single-page engineering report with charts, tables, diagrams, math, code, and light/dark mode.">
+  <title>Northstar API · Reliability review</title>
+
+  <script>
+    (() => {
+      const stored = localStorage.getItem('report-theme');
+      const previewTheme = new URLSearchParams(location.search).get('theme');
+      const dark = previewTheme === 'dark' || (previewTheme !== 'light' && (stored ? stored === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches));
+      document.documentElement.classList.toggle('dark', dark);
+      document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+    })();
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: { ink: '#0d0d0d', paper: '#fbfbfb' },
+          fontFamily: {
+            sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+            mono: ['SFMono-Regular', 'Cascadia Code', 'Roboto Mono', 'ui-monospace', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.10.0/build/styles/github-dark.min.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&icon_names=add,contrast,info&display=block">
+  <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.10.0/build/highlight.min.js"></script>
+
+  <style>
+    :root { --rule: #e4e4e7; --muted: #71717a; --chart-grid: #e4e4e7; }
+    .dark { --rule: #27272a; --muted: #a1a1aa; --chart-grid: #27272a; }
+    body { text-rendering: optimizeLegibility; }
+    section { scroll-margin-top: 2rem; }
+    .section-link { border-left: 1px solid var(--rule); color: var(--muted); transition: color 150ms ease-out, border-color 150ms ease-out; }
+    .section-link:hover { color: inherit; }
+    .section-link.active { border-left-color: currentColor; color: inherit; font-weight: 600; }
+    .metric-value, .tabular { font-variant-numeric: tabular-nums; }
+    pre code.hljs { padding: 1.25rem; background: #0d0d0d; }
+    .code-wrap pre { margin: 0; overflow: auto; }
+    .mermaid svg { max-width: 100%; height: auto; margin-inline: auto; }
+    .katex-display { overflow-x: auto; overflow-y: hidden; padding-block: .5rem; }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20; }
+    .control-motion { transition: color 150ms ease-out, background-color 150ms ease-out, border-color 150ms ease-out, box-shadow 150ms ease-out, transform 120ms ease-out; }
+    .control-motion:active { transform: scale(.97); }
+    .disclosure { transition: border-color 180ms ease-out, background-color 180ms ease-out; }
+    .disclosure-body { overflow: hidden; transform-origin: top; }
+    .disclosure-icon { transition: transform 180ms cubic-bezier(.2, .8, .2, 1), color 150ms ease-out; }
+    details[open] .disclosure-icon { transform: rotate(45deg); }
+    body.theme-transition, body.theme-transition * { transition-property: color, background-color, border-color, box-shadow; transition-duration: 180ms; transition-timing-function: ease-out; }
+    dialog::backdrop { background: rgb(0 0 0 / .48); }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
+    }
+    @media print {
+      html { color-scheme: light !important; }
+      body { background: white !important; color: black !important; }
+      .no-print { display: none !important; }
+      .print-full { max-width: none !important; padding: 0 !important; display: block !important; }
+      section, figure, pre, table { break-inside: avoid; }
+      a { color: inherit !important; text-decoration: none !important; }
+    }
+  </style>
+</head>
+
+<body class="bg-white text-zinc-950 antialiased selection:bg-blue-200 dark:bg-black dark:text-zinc-100 dark:selection:bg-blue-900">
+  <div class="fixed right-4 top-4 z-50 flex gap-2 no-print">
+    <button id="theme-toggle" type="button" class="control-motion inline-flex h-9 items-center gap-2 rounded-full border border-zinc-200 bg-white/90 px-3 text-xs font-medium shadow-sm backdrop-blur hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-800 dark:bg-zinc-950/90 dark:hover:bg-zinc-900" aria-label="Switch color theme">
+      <span class="material-symbols-outlined text-[16px]" aria-hidden="true">contrast</span><span class="hidden sm:inline">Theme</span>
+    </button>
+    <button type="button" onclick="window.print()" class="control-motion inline-flex h-9 items-center rounded-full border border-zinc-200 bg-white/90 px-3 text-xs font-medium shadow-sm backdrop-blur hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-800 dark:bg-zinc-950/90 dark:hover:bg-zinc-900">
+      Print
+    </button>
+  </div>
+
+  <div class="print-full mx-auto grid max-w-[1180px] grid-cols-1 gap-14 px-6 pb-24 pt-20 lg:grid-cols-[minmax(0,820px)_200px] lg:px-10 lg:pt-24">
+    <main class="min-w-0">
+      <header class="mb-16 border-b border-zinc-200 pb-12 dark:border-zinc-800">
+        <div class="mb-6 flex flex-wrap items-center gap-3 text-xs font-medium uppercase tracking-[0.16em] text-zinc-500 dark:text-zinc-400">
+          <span>Engineering report</span><span aria-hidden="true">·</span><time datetime="2026-09-19">19 Sep 2026</time><span class="rounded-full border border-emerald-300 px-2 py-1 normal-case tracking-normal text-emerald-700 dark:border-emerald-900 dark:text-emerald-400">Healthy</span>
+        </div>
+        <h1 class="max-w-3xl text-4xl font-semibold tracking-[-0.035em] sm:text-5xl">Northstar API reliability review</h1>
+        <p class="mt-5 max-w-2xl text-lg leading-8 text-zinc-600 dark:text-zinc-400">Latency improved while traffic grew, but the checkout endpoint now consumes most of the error budget. The next reliability cycle should prioritize that single path.</p>
+
+        <dl class="mt-10 grid grid-cols-2 border-y border-zinc-200 sm:grid-cols-4 dark:border-zinc-800">
+          <div class="border-b border-r border-zinc-200 py-5 pr-4 sm:border-b-0 dark:border-zinc-800">
+            <dt class="text-xs text-zinc-500 dark:text-zinc-400">Availability</dt>
+            <dd class="metric-value mt-2 text-2xl font-semibold">99.95%</dd>
+            <p class="mt-1 text-xs text-emerald-700 dark:text-emerald-400">+0.03 pp</p>
+          </div>
+          <div class="border-b border-zinc-200 py-5 pl-4 sm:border-b-0 sm:border-r sm:pr-4 dark:border-zinc-800">
+            <dt class="text-xs text-zinc-500 dark:text-zinc-400">p95 latency</dt>
+            <dd class="metric-value mt-2 text-2xl font-semibold">184 ms</dd>
+            <p class="mt-1 text-xs text-emerald-700 dark:text-emerald-400">−19% month/month</p>
+          </div>
+          <div class="border-r border-zinc-200 py-5 pr-4 sm:pl-4 dark:border-zinc-800">
+            <dt class="text-xs text-zinc-500 dark:text-zinc-400">Requests</dt>
+            <dd class="metric-value mt-2 text-2xl font-semibold">81.4M</dd>
+            <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">+12% month/month</p>
+          </div>
+          <div class="py-5 pl-4">
+            <dt class="text-xs text-zinc-500 dark:text-zinc-400">Budget used</dt>
+            <dd class="metric-value mt-2 text-2xl font-semibold">43%</dd>
+            <p class="mt-1 text-xs text-amber-700 dark:text-amber-400">Watch checkout</p>
+          </div>
+        </dl>
+      </header>
+
+      <details data-animated-disclosure class="disclosure mb-12 rounded-lg border border-zinc-200 lg:hidden dark:border-zinc-800 no-print">
+        <summary class="flex cursor-pointer list-none items-center justify-between rounded-lg px-4 py-3 text-sm font-medium outline-none hover:bg-zinc-50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500 dark:hover:bg-zinc-900/60">
+          <span>On this page</span><span class="material-symbols-outlined disclosure-icon text-[20px] text-zinc-400" aria-hidden="true">add</span>
+        </summary>
+        <div class="disclosure-body"><nav class="grid gap-2 px-4 pb-4 pt-1 text-sm text-zinc-600 dark:text-zinc-400" aria-label="Mobile table of contents">
+          <a href="#summary">Executive summary</a><a href="#trend">Latency trend</a><a href="#endpoints">Endpoints</a><a href="#flow">Incident flow</a><a href="#math">Error budget</a><a href="#code">Implementation</a><a href="#method">Methodology</a>
+        </nav></div>
+      </details>
+
+      <section id="summary" class="mb-20" aria-labelledby="summary-title">
+        <p class="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-blue-700 dark:text-blue-400">01 · Readout</p>
+        <h2 id="summary-title" class="text-2xl font-semibold tracking-tight sm:text-3xl">Executive summary</h2>
+        <div class="mt-6 grid gap-8 text-[15px] leading-7 text-zinc-700 sm:grid-cols-2 dark:text-zinc-300">
+          <p><strong class="text-zinc-950 dark:text-white">The system absorbed more demand with less latency.</strong> A cache-policy rollout reduced p95 latency by 19% while request volume increased 12%. The gain appears durable across every observed region.</p>
+          <p><strong class="text-zinc-950 dark:text-white">Risk is concentrated, not systemic.</strong> Checkout produced 61% of failed requests despite carrying only 18% of traffic. The failure mode is an upstream payment timeout with a known mitigation.</p>
+        </div>
+        <div role="note" class="mt-8 flex items-start gap-4 rounded-xl border border-zinc-300 px-5 py-4 text-sm leading-6 text-zinc-800 dark:border-zinc-700 dark:text-zinc-200">
+          <span class="material-symbols-outlined mt-0.5 shrink-0 text-[20px] text-zinc-700 dark:text-zinc-300" aria-hidden="true">info</span>
+          <p><strong class="font-semibold text-zinc-950 dark:text-white">Recommendation:</strong> ship bounded retries and a circuit breaker for the payment adapter before expanding traffic allocation beyond 60%.</p>
+        </div>
+      </section>
+
+      <section id="trend" class="mb-20" aria-labelledby="trend-title">
+        <div class="border-t border-zinc-200 pt-8 dark:border-zinc-800">
+          <p class="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-blue-700 dark:text-blue-400">02 · Performance</p>
+          <div class="flex flex-wrap items-end justify-between gap-3">
+            <div><h2 id="trend-title" class="text-2xl font-semibold tracking-tight sm:text-3xl">Latency moved in the right direction</h2><p class="mt-3 max-w-2xl text-sm leading-6 text-zinc-600 dark:text-zinc-400">The cache rollout began in week three. Both median and tail latency declined without a corresponding error spike.</p></div>
+            <span class="rounded-full bg-zinc-100 px-3 py-1 text-xs text-zinc-600 dark:bg-zinc-900 dark:text-zinc-400">Lower is better</span>
+          </div>
+        </div>
+        <figure class="mt-8">
+          <div class="h-[340px] border-y border-zinc-200 py-5 dark:border-zinc-800"><canvas id="latency-chart" aria-label="Weekly p50 and p95 API latency line chart" role="img"></canvas><p id="chart-fallback" class="hidden text-sm text-zinc-500">Chart unavailable. Weekly p95 values: 236, 228, 214, 203, 196, 189, and 184 milliseconds.</p></div>
+          <figcaption class="mt-3 text-xs leading-5 text-zinc-500 dark:text-zinc-400">Weekly latency across successful production requests. The vertical annotation marks the cache-policy rollout.</figcaption>
+        </figure>
+      </section>
+
+      <section id="endpoints" class="mb-20" aria-labelledby="endpoints-title">
+        <div class="border-t border-zinc-200 pt-8 dark:border-zinc-800">
+          <p class="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-blue-700 dark:text-blue-400">03 · Detail</p>
+          <h2 id="endpoints-title" class="text-2xl font-semibold tracking-tight sm:text-3xl">Checkout is the clear outlier</h2>
+          <p class="mt-3 max-w-2xl text-sm leading-6 text-zinc-600 dark:text-zinc-400">Filter the endpoints or select a header to sort. The illustrative values below reconcile to the headline indicators.</p>
+        </div>
+        <div class="mt-6 flex items-center gap-3 no-print">
+          <label for="table-filter" class="sr-only">Filter endpoints</label>
+          <input id="table-filter" type="search" placeholder="Filter endpoints…" class="control-motion w-full max-w-sm rounded-md border border-zinc-300 bg-transparent px-3 py-2 text-sm outline-none placeholder:text-zinc-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700">
+        </div>
+        <div class="mt-4 overflow-x-auto border-y border-zinc-200 dark:border-zinc-800">
+          <table id="endpoint-table" class="w-full min-w-[650px] text-left text-sm">
+            <caption class="sr-only">Reliability metrics by API endpoint</caption>
+            <thead class="text-xs text-zinc-500 dark:text-zinc-400">
+              <tr>
+                <th scope="col" class="px-3 py-3 font-medium"><button data-sort="0" type="button" class="control-motion rounded-sm hover:text-zinc-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:hover:text-white">Endpoint ↕</button></th>
+                <th scope="col" class="px-3 py-3 text-right font-medium"><button data-sort="1" data-numeric type="button" class="control-motion rounded-sm hover:text-zinc-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:hover:text-white">Traffic ↕</button></th>
+                <th scope="col" class="px-3 py-3 text-right font-medium"><button data-sort="2" data-numeric type="button" class="control-motion rounded-sm hover:text-zinc-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:hover:text-white">p95 ↕</button></th>
+                <th scope="col" class="px-3 py-3 text-right font-medium"><button data-sort="3" data-numeric type="button" class="control-motion rounded-sm hover:text-zinc-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:hover:text-white">Error rate ↕</button></th>
+                <th scope="col" class="px-3 py-3 font-medium">Assessment</th>
+              </tr>
+            </thead>
+            <tbody class="tabular divide-y divide-zinc-200 dark:divide-zinc-800">
+              <tr><th scope="row" class="px-3 py-4 font-mono text-xs font-medium">/v1/search</th><td class="px-3 py-4 text-right">31%</td><td class="px-3 py-4 text-right">142 ms</td><td class="px-3 py-4 text-right">0.02%</td><td class="px-3 py-4 text-emerald-700 dark:text-emerald-400">Within target</td></tr>
+              <tr><th scope="row" class="px-3 py-4 font-mono text-xs font-medium">/v1/catalog</th><td class="px-3 py-4 text-right">24%</td><td class="px-3 py-4 text-right">171 ms</td><td class="px-3 py-4 text-right">0.03%</td><td class="px-3 py-4 text-emerald-700 dark:text-emerald-400">Within target</td></tr>
+              <tr><th scope="row" class="px-3 py-4 font-mono text-xs font-medium">/v1/checkout</th><td class="px-3 py-4 text-right">18%</td><td class="px-3 py-4 text-right">412 ms</td><td class="px-3 py-4 text-right">0.31%</td><td class="px-3 py-4 text-amber-700 dark:text-amber-400">Action needed</td></tr>
+              <tr><th scope="row" class="px-3 py-4 font-mono text-xs font-medium">/v1/profile</th><td class="px-3 py-4 text-right">15%</td><td class="px-3 py-4 text-right">156 ms</td><td class="px-3 py-4 text-right">0.04%</td><td class="px-3 py-4 text-emerald-700 dark:text-emerald-400">Within target</td></tr>
+              <tr><th scope="row" class="px-3 py-4 font-mono text-xs font-medium">/v1/recommend</th><td class="px-3 py-4 text-right">12%</td><td class="px-3 py-4 text-right">229 ms</td><td class="px-3 py-4 text-right">0.06%</td><td class="px-3 py-4 text-zinc-600 dark:text-zinc-400">Observe</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p id="table-status" class="mt-3 text-xs text-zinc-500" aria-live="polite">5 endpoints shown</p>
+      </section>
+
+      <section id="flow" class="mb-20" aria-labelledby="flow-title">
+        <div class="border-t border-zinc-200 pt-8 dark:border-zinc-800">
+          <p class="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-blue-700 dark:text-blue-400">04 · Operations</p>
+          <h2 id="flow-title" class="text-2xl font-semibold tracking-tight sm:text-3xl">The mitigation path is short</h2>
+          <p class="mt-3 max-w-2xl text-sm leading-6 text-zinc-600 dark:text-zinc-400">The proposed policy contains transient payment timeouts and sends persistent failures to a manual-review queue.</p>
+        </div>
+        <figure class="mt-8 border-y border-zinc-200 py-8 dark:border-zinc-800">
+          <div id="incident-diagram" class="mermaid" aria-label="Checkout incident mitigation flow diagram"></div>
+          <template id="diagram-source">
+flowchart LR
+  A[Checkout request] --> B{Payment call}
+  B -->|Success| C[Confirm order]
+  B -->|Timeout| D[Bounded retry]
+  D -->|Recovered| C
+  D -->|Failed| E[Open circuit]
+  E --> F[Manual review queue]
+          </template>
+          <p id="diagram-fallback" class="hidden text-sm text-zinc-500">Diagram unavailable. Flow: checkout request → payment call → success confirms order; timeout triggers one bounded retry; persistent failure opens the circuit and queues manual review.</p>
+          <figcaption class="mt-5 text-xs text-zinc-500 dark:text-zinc-400">A single retry is permitted only for idempotent payment calls.</figcaption>
+        </figure>
+      </section>
+
+      <section id="math" class="mb-20" aria-labelledby="math-title">
+        <div class="border-t border-zinc-200 pt-8 dark:border-zinc-800">
+          <p class="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-blue-700 dark:text-blue-400">05 · SLO</p>
+          <h2 id="math-title" class="text-2xl font-semibold tracking-tight sm:text-3xl">Error-budget accounting</h2>
+          <p class="mt-3 max-w-2xl text-sm leading-6 text-zinc-600 dark:text-zinc-400">For a 99.9% monthly availability objective, the allowed bad-request ratio is $1-SLO$. Budget consumption compares observed failures with that allowance.</p>
+        </div>
+        <div class="mt-7 rounded-lg border border-zinc-200 px-5 py-6 text-center dark:border-zinc-800">
+          $$\text{Budget used}=\frac{\text{failed requests}}{\text{total requests}\times(1-SLO)}\times100\%$$
+        </div>
+        <p class="mt-5 text-sm leading-6 text-zinc-600 dark:text-zinc-400">At the current burn rate, the service has 57% of its monthly budget remaining. Checkout remediation has the highest leverage because its failures dominate the numerator.</p>
+      </section>
+
+      <section id="code" class="mb-20" aria-labelledby="code-title">
+        <div class="border-t border-zinc-200 pt-8 dark:border-zinc-800">
+          <p class="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-blue-700 dark:text-blue-400">06 · Implementation</p>
+          <h2 id="code-title" class="text-2xl font-semibold tracking-tight sm:text-3xl">Bound retries by time and count</h2>
+          <p class="mt-3 max-w-2xl text-sm leading-6 text-zinc-600 dark:text-zinc-400">The retry must fit inside the request deadline and preserve the payment idempotency key.</p>
+        </div>
+        <div class="code-wrap mt-7 overflow-hidden rounded-lg border border-zinc-800 bg-[#0d0d0d]">
+          <div class="flex items-center justify-between border-b border-zinc-800 px-4 py-2 text-xs text-zinc-400"><span>Python</span><button id="copy-code" type="button" class="control-motion no-print rounded px-2 py-1 hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-blue-500">Copy</button></div>
+          <pre><code id="code-sample" class="language-python">async def charge_with_retry(payment, *, deadline_ms=800):
+    for attempt in range(2):
+        try:
+            return await gateway.charge(
+                payment,
+                idempotency_key=payment.order_id,
+                timeout_ms=deadline_ms // 2,
+            )
+        except GatewayTimeout:
+            if attempt == 1:
+                raise
+</code></pre>
+        </div>
+      </section>
+
+      <section id="method" class="mb-16" aria-labelledby="method-title">
+        <div class="border-t border-zinc-200 pt-8 dark:border-zinc-800">
+          <p class="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-blue-700 dark:text-blue-400">07 · Notes</p>
+          <h2 id="method-title" class="text-2xl font-semibold tracking-tight sm:text-3xl">Methodology and limits</h2>
+        </div>
+        <div class="mt-6 grid gap-3 text-sm">
+          <details data-animated-disclosure class="disclosure group rounded-lg border border-zinc-300 bg-transparent open:border-zinc-400 dark:border-zinc-700 dark:open:border-zinc-600">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-4 rounded-lg px-5 py-4 font-medium outline-none marker:hidden hover:bg-zinc-50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500 dark:hover:bg-zinc-900/60">
+              <span>Measurement window</span><span class="material-symbols-outlined disclosure-icon text-[20px] text-zinc-400" aria-hidden="true">add</span>
+            </summary>
+            <div class="disclosure-body"><p class="max-w-2xl px-5 pb-4 leading-6 text-zinc-600 dark:text-zinc-400">Illustrative production telemetry covering seven complete UTC weeks. Synthetic checks and client-cancelled requests are excluded.</p></div>
+          </details>
+          <details data-animated-disclosure class="disclosure group rounded-lg border border-zinc-300 bg-transparent open:border-zinc-400 dark:border-zinc-700 dark:open:border-zinc-600">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-4 rounded-lg px-5 py-4 font-medium outline-none marker:hidden hover:bg-zinc-50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500 dark:hover:bg-zinc-900/60">
+              <span>Percentile calculation</span><span class="material-symbols-outlined disclosure-icon text-[20px] text-zinc-400" aria-hidden="true">add</span>
+            </summary>
+            <div class="disclosure-body"><p class="max-w-2xl px-5 pb-4 leading-6 text-zinc-600 dark:text-zinc-400">Latency percentiles are calculated from successful server-side request duration and weighted by request count, not by endpoint.</p></div>
+          </details>
+          <details data-animated-disclosure class="disclosure group rounded-lg border border-zinc-300 bg-transparent open:border-zinc-400 dark:border-zinc-700 dark:open:border-zinc-600">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-4 rounded-lg px-5 py-4 font-medium outline-none marker:hidden hover:bg-zinc-50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500 dark:hover:bg-zinc-900/60">
+              <span>Important limitation</span><span class="material-symbols-outlined disclosure-icon text-[20px] text-zinc-400" aria-hidden="true">add</span>
+            </summary>
+            <div class="disclosure-body"><p class="max-w-2xl px-5 pb-4 leading-6 text-zinc-600 dark:text-zinc-400">All values in this example are fictional and exist only to demonstrate the report format.</p></div>
+          </details>
+        </div>
+      </section>
+
+      <footer class="border-t border-zinc-200 pt-6 text-xs leading-5 text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
+        Example output for the <code class="font-mono">html-report-builder</code> skill. All data is illustrative.
+      </footer>
+    </main>
+
+    <aside class="no-print hidden lg:block" aria-label="On this page">
+      <nav class="sticky top-24 text-sm">
+        <p class="mb-4 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">On this page</p>
+        <div id="section-nav" class="flex flex-col">
+          <a class="section-link active px-4 py-2" href="#summary">Executive summary</a>
+          <a class="section-link px-4 py-2" href="#trend">Latency trend</a>
+          <a class="section-link px-4 py-2" href="#endpoints">Endpoints</a>
+          <a class="section-link px-4 py-2" href="#flow">Incident flow</a>
+          <a class="section-link px-4 py-2" href="#math">Error budget</a>
+          <a class="section-link px-4 py-2" href="#code">Implementation</a>
+          <a class="section-link px-4 py-2" href="#method">Methodology</a>
+        </div>
+      </nav>
+    </aside>
+  </div>
+
+  <script type="module">
+    try {
+      const mermaid = (await import('https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs')).default;
+      window.renderReportDiagram = async () => {
+        const dark = document.documentElement.classList.contains('dark');
+        const node = document.getElementById('incident-diagram');
+        node.removeAttribute('data-processed');
+        node.textContent = document.getElementById('diagram-source').content.textContent.trim();
+        mermaid.initialize({ startOnLoad: false, theme: dark ? 'dark' : 'neutral', securityLevel: 'strict', fontFamily: 'Inter, system-ui, sans-serif' });
+        await mermaid.run({ nodes: [node] });
+      };
+      await window.renderReportDiagram();
+    } catch (error) {
+      document.getElementById('incident-diagram').classList.add('hidden');
+      document.getElementById('diagram-fallback').classList.remove('hidden');
+    }
+  </script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const root = document.documentElement;
+      const themeButton = document.getElementById('theme-toggle');
+      const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+      let chart;
+
+      themeButton.setAttribute('aria-pressed', String(root.classList.contains('dark')));
+
+      const chartColors = () => {
+        const dark = root.classList.contains('dark');
+        return { text: dark ? '#a1a1aa' : '#52525b', grid: dark ? '#27272a' : '#e4e4e7' };
+      };
+
+      const updateChartTheme = () => {
+        if (!chart) return;
+        const colors = chartColors();
+        chart.options.color = colors.text;
+        chart.options.scales.x.grid.color = colors.grid;
+        chart.options.scales.y.grid.color = colors.grid;
+        chart.options.scales.x.ticks.color = colors.text;
+        chart.options.scales.y.ticks.color = colors.text;
+        chart.update();
+      };
+
+      themeButton.addEventListener('click', async () => {
+        if (!reducedMotion.matches) {
+          document.body.classList.add('theme-transition');
+          void document.body.offsetWidth;
+        }
+        const dark = root.classList.toggle('dark');
+        root.style.colorScheme = dark ? 'dark' : 'light';
+        localStorage.setItem('report-theme', dark ? 'dark' : 'light');
+        themeButton.setAttribute('aria-pressed', String(dark));
+        updateChartTheme();
+        if (window.renderReportDiagram) await window.renderReportDiagram();
+        setTimeout(() => document.body.classList.remove('theme-transition'), 220);
+      });
+
+      document.querySelectorAll('[data-animated-disclosure]').forEach(details => {
+        const summary = details.querySelector(':scope > summary');
+        const body = details.querySelector(':scope > .disclosure-body');
+        let animation = null;
+        if (!summary || !body) return;
+
+        summary.addEventListener('click', event => {
+          if (reducedMotion.matches) return;
+          event.preventDefault();
+          if (animation) return;
+
+          const opening = !details.open;
+          if (opening) details.open = true;
+          const fullHeight = body.scrollHeight;
+          animation = body.animate(
+            opening
+              ? [{ height: '0px', opacity: 0, transform: 'translateY(-4px)' }, { height: `${fullHeight}px`, opacity: 1, transform: 'translateY(0)' }]
+              : [{ height: `${fullHeight}px`, opacity: 1, transform: 'translateY(0)' }, { height: '0px', opacity: 0, transform: 'translateY(-4px)' }],
+            { duration: 190, easing: 'cubic-bezier(.2,.8,.2,1)' }
+          );
+          animation.onfinish = () => {
+            if (!opening) details.open = false;
+            animation = null;
+          };
+          animation.oncancel = () => { animation = null; };
+        });
+      });
+
+      if (window.Chart) {
+        const colors = chartColors();
+        chart = new Chart(document.getElementById('latency-chart'), {
+          type: 'line',
+          data: {
+            labels: ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7'],
+            datasets: [
+              { label: 'p95 latency', data: [236, 228, 214, 203, 196, 189, 184], borderColor: '#2563eb', backgroundColor: '#2563eb18', borderWidth: 2, pointRadius: 3, tension: .32, fill: true },
+              { label: 'p50 latency', data: [82, 80, 76, 71, 68, 66, 64], borderColor: '#a1a1aa', backgroundColor: 'transparent', borderWidth: 1.5, pointRadius: 2, tension: .32 }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            color: colors.text,
+            interaction: { intersect: false, mode: 'index' },
+            plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, padding: 24 } }, tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.parsed.y} ms` } } },
+            scales: {
+              x: { grid: { color: colors.grid }, border: { display: false }, ticks: { color: colors.text } },
+              y: { beginAtZero: false, suggestedMin: 0, grid: { color: colors.grid }, border: { display: false }, ticks: { color: colors.text, callback: v => `${v} ms` } }
+            }
+          }
+        });
+      } else {
+        document.getElementById('latency-chart').classList.add('hidden');
+        document.getElementById('chart-fallback').classList.remove('hidden');
+      }
+
+      if (window.renderMathInElement) {
+        renderMathInElement(document.body, { delimiters: [{ left: '$$', right: '$$', display: true }, { left: '$', right: '$', display: false }], throwOnError: false });
+      }
+      if (window.hljs) hljs.highlightAll();
+
+      document.getElementById('copy-code').addEventListener('click', async (event) => {
+        const button = event.currentTarget;
+        try {
+          await navigator.clipboard.writeText(document.getElementById('code-sample').innerText);
+          button.textContent = 'Copied';
+        } catch {
+          button.textContent = 'Select to copy';
+        }
+        setTimeout(() => { button.textContent = 'Copy'; }, 1400);
+      });
+
+      const navLinks = [...document.querySelectorAll('#section-nav a')];
+      const sections = navLinks.map(link => document.querySelector(link.hash)).filter(Boolean);
+      const observer = new IntersectionObserver(entries => {
+        const visible = entries.filter(entry => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (!visible) return;
+        navLinks.forEach(link => {
+          const active = link.hash === `#${visible.target.id}`;
+          link.classList.toggle('active', active);
+          link.setAttribute('aria-current', active ? 'location' : 'false');
+        });
+      }, { rootMargin: '-15% 0px -65% 0px', threshold: [0, .2, .6] });
+      sections.forEach(section => observer.observe(section));
+
+      const table = document.getElementById('endpoint-table');
+      const tbody = table.tBodies[0];
+      const status = document.getElementById('table-status');
+      table.querySelectorAll('thead button[data-sort]').forEach(button => {
+        let ascending = true;
+        button.addEventListener('click', () => {
+          const column = Number(button.dataset.sort);
+          const numeric = button.hasAttribute('data-numeric');
+          [...tbody.rows].sort((a, b) => {
+            const left = a.cells[column].textContent.trim();
+            const right = b.cells[column].textContent.trim();
+            const result = numeric
+              ? parseFloat(left.replace(/[^0-9.-]/g, '')) - parseFloat(right.replace(/[^0-9.-]/g, ''))
+              : left.localeCompare(right);
+            return ascending ? result : -result;
+          }).forEach(row => tbody.appendChild(row));
+          ascending = !ascending;
+        });
+      });
+
+      document.getElementById('table-filter').addEventListener('input', event => {
+        const query = event.target.value.trim().toLowerCase();
+        let shown = 0;
+        [...tbody.rows].forEach(row => {
+          const matches = row.textContent.toLowerCase().includes(query);
+          row.hidden = !matches;
+          if (matches) shown += 1;
+        });
+        status.textContent = `${shown} endpoint${shown === 1 ? '' : 's'} shown`;
+      });
+    });
+  </script>
+</body>
+</html>
