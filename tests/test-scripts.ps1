@@ -26,6 +26,7 @@ try {
 function Assert-InteractiveTerminal {}
 function Select-ArrowMenu {
     param($Title, $Items, [switch]$Multiple)
+    if ($Title -eq 'Choose how to import selected skills') { return $global:SkillImportMode }
     $global:CapturedItems = $Items
     $global:CapturedMultiple = [bool]$Multiple
     $global:MenuSelection
@@ -56,6 +57,7 @@ function Invoke-WebRequest {
     Set-Variable -Name HOME -Value $testHome -Scope Script -Force
     $global:OverwriteAnswer = 'yes'
     $global:MenuSelection = @(0, 1, 2)
+    $global:SkillImportMode = @(0)
     $global:DownloadCount = 0
     $global:DownloadFails = $false
     $global:RemoteContent = "remote instructions`n"
@@ -145,6 +147,7 @@ function Invoke-WebRequest {
     Assert-True ((Get-Content -LiteralPath (Join-Path $repo 'skills/alpha/.hidden') -Raw) -eq 'hidden asset') 'hidden file copied'
     Assert-True ((Get-Content -LiteralPath (Join-Path $repo 'skills/alpha/assets/file [1].txt') -Raw) -eq 'nested asset') 'nested file with literal brackets copied'
     Assert-True ((Get-Content -LiteralPath (Join-Path $repo 'skills/conflict') -Raw) -eq 'existing file with conflicting name') 'conflict untouched'
+    Assert-True (Test-Path -LiteralPath (Join-Path $HOME '.agents/skills/alpha/SKILL.md')) 'copy keeps original'
 
     $global:MenuSelection = @()
     & (Join-Path $repo 'scripts/import-skills.ps1')
@@ -159,6 +162,58 @@ function Invoke-WebRequest {
     $copied = Get-Item -LiteralPath (Join-Path $repo 'skills/linked')
     Assert-True (-not ($copied.Attributes -band [IO.FileAttributes]::ReparsePoint)) 'directory link dereferenced'
     Assert-True (Test-Path -LiteralPath (Join-Path $copied.FullName 'SKILL.md')) 'linked content copied'
+
+    # Cancelling the mode menu must not create any destination or remove a source.
+    Write-Fixture (Join-Path $HOME '.agents/skills/cancel-mode/SKILL.md') 'cancelled'
+    $global:MenuSelection = @(1)
+    $global:SkillImportMode = @()
+    & (Join-Path $repo 'scripts/import-skills.ps1')
+    Assert-True (-not (Test-Path -LiteralPath (Join-Path $repo 'skills/cancel-mode'))) 'mode cancellation creates no destination'
+    Assert-True (Test-Path -LiteralPath (Join-Path $HOME '.agents/skills/cancel-mode/SKILL.md')) 'mode cancellation keeps source'
+
+    # Moving both a directory and a link to it requires copying both before removal.
+    $moving = Join-Path $HOME '.agents/skills/move-dir'
+    Write-Fixture (Join-Path $moving 'SKILL.md') 'moving skill'
+    Write-Fixture (Join-Path $moving '.hidden') 'moving hidden file'
+    $external = Join-Path $HOME 'external assets'
+    Write-Fixture (Join-Path $external 'asset.txt') 'external asset'
+    New-Item -ItemType $linkType -Path (Join-Path $moving 'assets') -Target $external | Out-Null
+    $movingLink = Join-Path $HOME '.agents/skills/move-link'
+    New-Item -ItemType $linkType -Path $movingLink -Target $moving | Out-Null
+    $global:MenuSelection = @(4, 5)
+    $global:SkillImportMode = @(1)
+    $moveOutput = (& (Join-Path $repo 'scripts/import-skills.ps1') 6>&1 | Out-String)
+    Assert-True (-not (Test-Path -LiteralPath $moving)) 'move removes source directory'
+    Assert-True (-not (Test-Path -LiteralPath $movingLink)) 'move removes source link'
+    Assert-True ((Get-Content -LiteralPath (Join-Path $external 'asset.txt') -Raw) -eq 'external asset') 'nested link target untouched'
+    foreach ($name in @('move-dir', 'move-link')) {
+        Assert-True ((Get-Content -LiteralPath (Join-Path $repo "skills/$name/.hidden") -Raw) -eq 'moving hidden file') 'move copies hidden files'
+        Assert-True ((Get-Content -LiteralPath (Join-Path $repo "skills/$name/assets/asset.txt") -Raw) -eq 'external asset') 'move copies linked assets'
+    }
+    Assert-True ($moveOutput -like '*commit and push*npx skills add lioqing/.agents --global*') 'reinstall reminder displayed'
+
+    # Moving only a link must preserve its target directory.
+    $moveOnlyLink = Join-Path $HOME '.agents/skills/move-only-link'
+    New-Item -ItemType $linkType -Path $moveOnlyLink -Target (Join-Path $HOME '.agents/skills/alpha') | Out-Null
+    $global:MenuSelection = @(4)
+    & (Join-Path $repo 'scripts/import-skills.ps1')
+    Assert-True (-not (Test-Path -LiteralPath $moveOnlyLink)) 'standalone source link removed'
+    Assert-True (Test-Path -LiteralPath (Join-Path $HOME '.agents/skills/alpha/SKILL.md')) 'standalone link target untouched'
+
+    # A later copy failure must preserve every selected original.
+    $good = Join-Path $HOME '.agents/skills/fail-a-good'
+    $bad = Join-Path $HOME '.agents/skills/fail-b-loop'
+    Write-Fixture (Join-Path $good 'SKILL.md') 'good'
+    Write-Fixture (Join-Path $bad 'SKILL.md') 'bad'
+    New-Item -ItemType $linkType -Path (Join-Path $bad 'loop') -Target $bad | Out-Null
+    $global:MenuSelection = @(3, 4)
+    $failed = $false
+    try { & (Join-Path $repo 'scripts/import-skills.ps1') } catch { $failed = $true }
+    Assert-True $failed 'copy failure reported in move mode'
+    Assert-True (Test-Path -LiteralPath (Join-Path $good 'SKILL.md')) 'earlier original preserved on later copy failure'
+    Assert-True (Test-Path -LiteralPath (Join-Path $bad 'SKILL.md')) 'failed original preserved'
+    # Remove the loop itself before the sandbox cleanup on older PowerShell.
+    [IO.Directory]::Delete((Join-Path $bad 'loop'))
 
     # Exercise the real menu logic using synthetic ConsoleKey values.
     function Read-MenuKey {
@@ -200,5 +255,5 @@ function Invoke-WebRequest {
     Set-Variable -Name HOME -Value $originalHome -Scope Script -Force
     # Only remove the unique sandbox created by this test.
     if (Test-Path -LiteralPath $root) { Remove-Item -LiteralPath $root -Recurse -Force }
-    Remove-Variable MenuSelection, OverwriteAnswer, CapturedItems, CapturedMultiple, Keys, KeyIndex, RemoteContent, DownloadCount, DownloadUri, DownloadPath, DownloadFails -Scope Global -ErrorAction SilentlyContinue
+    Remove-Variable MenuSelection, SkillImportMode, OverwriteAnswer, CapturedItems, CapturedMultiple, Keys, KeyIndex, RemoteContent, DownloadCount, DownloadUri, DownloadPath, DownloadFails -Scope Global -ErrorAction SilentlyContinue
 }

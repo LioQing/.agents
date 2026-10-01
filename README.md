@@ -1,4 +1,4 @@
-# Personal agent files
+# Personal agent configurations
 
 My shared agent instructions (`AGENTS.md`) and reusable skills (`skills/`).
 
@@ -74,15 +74,18 @@ bash ./scripts/install-agents.sh /desired/path/AGENTS.md
 
 Installers fetch `AGENTS.md` from `master` by default. Set `AGENTS_REF` to a
 branch, tag, or commit SHA to override it (PowerShell also accepts `-Ref`).
-For a pinned remote installation, replace `master` in the installer URL with
-the same ref and set `AGENTS_REF` so the instructions are pinned too.
-Running from a clone still downloads the remote file, not the local copy.
 
-Missing parent directories are created. Existing files require confirmation
-and are backed up beside the original as `<filename>.backup-<timestamp>-<unique suffix>`.
-Answering anything other than `y` or `yes` skips that destination. Directories
-and symbolic links are not overwritten. Downloads are stored in a temporary
-file and cleaned up afterward. A failed or empty download changes no destinations.
+To pin both the installer and instructions, replace `master` in the installer
+URL and set `AGENTS_REF` to the same ref. Even from a clone, installers download
+the remote file, not the local copy.
+
+- Missing parent directories are created.
+- Existing files require `y` or `yes` to overwrite; any other answer skips that
+  destination. Backups are saved beside the original as
+  `<filename>.backup-<timestamp>-<unique suffix>`.
+- Directories and symbolic links are not overwritten.
+- Downloads use temporary files, cleaned up afterward. Failed or empty downloads
+  change no destinations.
 
 ## Development: bring local files into this repo
 
@@ -97,12 +100,31 @@ bash ./scripts/import-skills.sh
 ```
 
 The menu lists skill directories in `~/.agents/skills` containing `SKILL.md`.
-Select multiple skills to copy into this repository's `skills/` folder.
-Names already present in the repo are marked **unavailable** and cannot be
-selected, even if the existing entry is not a directory. Nothing is overwritten.
-The entire skill directory is copied, including hidden files and supporting
-resources. Installed symbolic links are followed so the imported skill is a
-self-contained copy, not a link back into your home directory.
+Select skills to import into this repository's `skills/` folder, then
+choose **Copy** (the default, keeps originals) or **Move** (removes originals).
+Cancelling either menu leaves all files unchanged.
+
+- Multiple skills can be selected. Names already in the repo are **unavailable**,
+  even if the existing entry is not a directory. Nothing is overwritten.
+- Copies include the entire directory, hidden files and supporting resources.
+  Installed symbolic links are followed to create self-contained copies.
+
+Move removes originals only after **all** selected skills copy successfully.
+Symbolic links and junctions, including links inside a skill, are removed without
+deleting their targets.
+
+A failed copy keeps all originals. A failed removal may leave some originals
+behind, but all repo copies are already present.
+
+After importing, the script reminds you to review, commit and push the skills,
+then reinstall/update your home-directory skills (requires Node.js/npm):
+
+```sh
+npx skills add lioqing/.agents --global
+```
+
+This command is displayed only, never run automatically. Follow its prompts to
+choose skills and agents. Push first so the remote repository contains your imports.
 
 ### Import agent instructions
 
@@ -131,22 +153,25 @@ choose **Cancel** or enter **q** to cancel.
 - **Esc** or **q**: cancel without copying. Multi-select menus need at least one selection.
 - `[-]` means unavailable; `[x]` means selected.
 
-PowerShell scripts require **PowerShell 5.0+**. For Windows PowerShell 5.x,
-replace `pwsh` with `powershell` in the commands above and below.
-Bash scripts require **Bash 3.2+** and standard `cp`, `mkdir`, and `date` utilities
-(macOS, Linux, WSL, or Git Bash). The Bash installer additionally requires
-`curl` and `mktemp`. Neither version needs an external menu package. Arrow-key
-menus require an interactive ANSI-capable terminal, not redirected input/output.
-A terminal at least 80 columns wide and 15 rows tall is recommended.
-Bash import menus also accept **j/k** for down/up.
-On Bash 3.2, cancelling with **Esc** may take one second; **q** is immediate.
+- PowerShell scripts require **PowerShell 5.0+**. For Windows PowerShell 5.x,
+  replace `pwsh` with `powershell` in all commands.
+- Bash scripts require **Bash 3.2+** and `cp`, `mkdir`, `rm`, and `date`
+  (macOS, Linux, WSL, or Git Bash). The installer also needs `curl` and `mktemp`.
+- Neither version needs an external menu package.
+- Arrow-key menus require an interactive ANSI-capable terminal without redirected
+  input/output. At least 80 columns and 15 rows are recommended.
+- Bash import menus also accept **j/k** for down/up. On Bash 3.2, **Esc** may
+  take one second to cancel; **q** is immediate.
 
-Default destinations use the current user's home directory. Under WSL that is
-the Linux home, not the Windows home. Import scripts resolve the repository from
-their own location; installers do not require a repository checkout. They do
-not automatically install skills, commit changes, or delete user files.
-A failed copy can leave a partial destination; inspect it before
-retrying. Review imported files and backup files before committing.
+Default destinations use the current user's home directory (the Linux home under
+WSL, not the Windows home). Import scripts locate the repo from their own location;
+installers need no checkout.
+
+Scripts do not automatically install skills or commit changes. Only explicitly
+selected **Move** imports delete original skills.
+
+A failed copy can leave a partial destination; inspect it before retrying.
+Review imported files and backups before committing.
 
 ## Tests
 

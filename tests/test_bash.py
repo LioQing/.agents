@@ -60,7 +60,7 @@ printf '%s\\n' "$destination" >> "$FAKE_CURL_LOG"
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(content)
 
-    def run_script(self, name, keys, command=None):
+    def run_script(self, name, keys, command=None, expected_exit=0):
         master, slave = pty.openpty()
         fcntl.ioctl(slave, termios.TIOCSWINSZ, struct.pack("HHHH", 30, 100, 0, 0))
         process = subprocess.Popen(
@@ -93,7 +93,7 @@ printf '%s\\n' "$destination" >> "$FAKE_CURL_LOG"
                             break
                     break
             self.assertIsNotNone(process.poll(), output.decode(errors="replace"))
-            self.assertEqual(process.wait(), 0, output.decode(errors="replace"))
+            self.assertEqual(process.wait(), expected_exit, output.decode(errors="replace"))
             return output.decode(errors="replace")
         finally:
             if process.poll() is None:
@@ -184,19 +184,67 @@ printf '%s\\n' "$destination" >> "$FAKE_CURL_LOG"
         self.write(self.repo / "skills/conflict", "leave alone")
         (source / "linked").symlink_to(source / "alpha", target_is_directory=True)
         # Select alpha and linked; Space on the conflicting entry is ignored.
-        output = self.run_script("import-skills.sh", b" \x1b[B \x1b[B \n")
+        output = self.run_script("import-skills.sh", b" \x1b[B \x1b[B \n\n")
         self.assertIn("unavailable: name already exists", output)
         self.assertEqual((self.repo / "skills/conflict").read_text(), "leave alone")
         self.assertEqual((self.repo / "skills/alpha/.hidden").read_text(), "hidden")
         self.assertEqual((self.repo / "skills/linked/assets/file [1].txt").read_text(), "asset")
         self.assertFalse((self.repo / "skills/linked").is_symlink())
         self.assertFalse((self.repo / "skills/invalid").exists())
+        self.assertTrue((source / "alpha/SKILL.md").exists())
+        self.assertTrue((source / "linked").is_symlink())
+        self.assertIn("npx skills add lioqing/.agents --global", output)
         self.assertIn("No available choices", self.run_script("import-skills.sh", b""))
+
+    def test_skill_move_and_link_safety(self):
+        source = self.home / ".agents/skills"
+        self.write(source / "alpha/SKILL.md", "alpha")
+        self.write(source / "alpha/.hidden", "hidden")
+        external = self.home / "external assets"
+        self.write(external / "asset.txt", "asset")
+        (source / "alpha/assets").symlink_to(external, target_is_directory=True)
+        (source / "linked").symlink_to(source / "alpha", target_is_directory=True)
+        output = self.run_script("import-skills.sh", b" \x1b[B \n\x1b[B\n")
+        self.assertFalse((source / "alpha").exists())
+        self.assertFalse((source / "linked").is_symlink())
+        self.assertEqual((external / "asset.txt").read_text(), "asset")
+        for name in ("alpha", "linked"):
+            self.assertEqual((self.repo / f"skills/{name}/.hidden").read_text(), "hidden")
+            self.assertEqual((self.repo / f"skills/{name}/assets/asset.txt").read_text(), "asset")
+        self.assertIn("commit and push", output)
+        self.assertIn("npx skills add lioqing/.agents --global", output)
+
+    def test_skill_move_only_link_preserves_target(self):
+        source = self.home / ".agents/skills/linked"
+        target = self.home / "external skill"
+        self.write(target / "SKILL.md", "external")
+        source.parent.mkdir(parents=True)
+        source.symlink_to(target, target_is_directory=True)
+        self.run_script("import-skills.sh", b" \n\x1b[B\n")
+        self.assertFalse(source.is_symlink())
+        self.assertEqual((target / "SKILL.md").read_text(), "external")
+        self.assertEqual((self.repo / "skills/linked/SKILL.md").read_text(), "external")
+
+    def test_skill_mode_cancel_changes_nothing(self):
+        source = self.home / ".agents/skills/alpha/SKILL.md"
+        self.write(source, "alpha")
+        self.run_script("import-skills.sh", b" \nq")
+        self.assertEqual(source.read_text(), "alpha")
+        self.assertFalse((self.repo / "skills").exists())
+
+    def test_skill_move_copy_failure_preserves_all_sources(self):
+        source = self.home / ".agents/skills"
+        self.write(source / "alpha/SKILL.md", "alpha")
+        self.write(source / "broken/SKILL.md", "broken")
+        (source / "broken/loop").symlink_to(source / "broken", target_is_directory=True)
+        self.run_script("import-skills.sh", b" \x1b[B \n\x1b[B\n", expected_exit=1)
+        self.assertEqual((source / "alpha/SKILL.md").read_text(), "alpha")
+        self.assertEqual((source / "broken/SKILL.md").read_text(), "broken")
 
     def test_paging_and_escape(self):
         for i in range(12):
             self.write(self.home / f".agents/skills/skill-{i:02d}/SKILL.md", str(i))
-        output = self.run_script("import-skills.sh", b"\x1b[B" * 10 + b" \n")
+        output = self.run_script("import-skills.sh", b"\x1b[B" * 10 + b" \n\n")
         self.assertIn("Choices 11-12 of 12", output)
         self.assertEqual((self.repo / "skills/skill-10/SKILL.md").read_text(), "10")
         self.run_script("import-skills.sh", b"\x1b")

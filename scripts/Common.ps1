@@ -164,3 +164,20 @@ function Copy-SkillTree {
         }
     }
 }
+
+function Remove-SkillTree {
+    param([Parameter(Mandatory)][string]$Path)
+
+    $entry = Get-Item -LiteralPath $Path -Force
+    if ($entry.PSIsContainer) {
+        # Never recurse through a symbolic link or junction, including on PS 5.
+        if (-not ($entry.Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+            foreach ($child in Get-ChildItem -LiteralPath $Path -Force) {
+                Remove-SkillTree -Path $child.FullName
+            }
+        }
+        [IO.Directory]::Delete($Path)
+    } else {
+        Remove-Item -LiteralPath $Path -Force
+    }
+}
