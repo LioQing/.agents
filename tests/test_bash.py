@@ -81,7 +81,7 @@ printf '%s\\n' "$destination" >> "$FAKE_CURL_LOG"
                     if not chunk:
                         break
                     output += chunk
-                    if not sent and (b"Choices " in output or b"Destination: " in output):
+                    if not sent and (b"Choices " in output or b"Destination: " in output or b"Backup mode: " in output):
                         os.write(master, keys)
                         sent = True
                 if process.poll() is not None:
@@ -107,7 +107,8 @@ printf '%s\\n' "$destination" >> "$FAKE_CURL_LOG"
         # No repository files or helper scripts are available to the installer.
         (self.repo / "AGENTS.md").unlink()
         (self.repo / "scripts/common.sh").unlink()
-        self.run_script("install-agents.sh", b"4\ny\n")
+        output = self.run_script("install-agents.sh", b"4\n1\ny\n")
+        self.assertIn(str(claude), output)
         for relative in (".claude/CLAUDE.md", ".codex/AGENTS.md", ".config/opencode/AGENTS.md"):
             self.assertEqual((self.home / relative).read_text(), "remote instructions\n")
         backups = list(claude.parent.glob("CLAUDE.md.backup-*"))
@@ -120,7 +121,7 @@ printf '%s\\n' "$destination" >> "$FAKE_CURL_LOG"
     def test_decline_and_cancel(self):
         claude = self.home / ".claude/CLAUDE.md"
         self.write(claude, "unchanged")
-        self.run_script("install-agents.sh", b"1\nn\n")
+        self.run_script("install-agents.sh", b"1\n1\nn\n")
         self.assertEqual(claude.read_text(), "unchanged")
         self.run_script("install-agents.sh", b"q\n")
         self.assertFalse((self.home / ".codex").exists())
@@ -129,11 +130,133 @@ printf '%s\\n' "$destination" >> "$FAKE_CURL_LOG"
         script = (self.repo / "scripts/install-agents.sh").read_text()
         destination = self.home / "custom path/instructions.md"
         output = self.run_script(
-            "install-agents.sh", f"invalid\n5\n{destination}\n".encode(),
+            "install-agents.sh", f"invalid\n5\n{destination}\n1\n".encode(),
             command=["bash", "-c", script],
         )
         self.assertIn("Enter a number from 1 to 6", output)
         self.assertEqual(destination.read_text(), "remote instructions\n")
+        self.assertIn("No existing instruction files found", output)
+
+    def test_install_without_backup_lists_all_existing_destinations(self):
+        destinations = (self.home / ".claude/CLAUDE.md", self.home / ".codex/AGENTS.md")
+        for destination in destinations:
+            self.write(destination, "old instructions")
+        output = self.run_script("install-agents.sh", b"4\n2\ny\ny\n")
+        for destination in destinations:
+            self.assertIn(str(destination), output)
+            self.assertEqual(destination.read_text(), "remote instructions\n")
+            self.assertEqual(list(destination.parent.glob("*.backup-*")), [])
+
+    def test_install_explicit_destination_backup_menu(self):
+        destination = self.home / "custom path/AGENTS.md"
+        self.write(destination, "old instructions")
+        command = ["bash", str(self.repo / "scripts/install-agents.sh"), str(destination)]
+        output = self.run_script("install-agents.sh", b"invalid\n2\nn\n", command=command)
+        self.assertIn("Enter a number from 1 to 3", output)
+        self.assertIn(str(destination), output)
+        self.assertEqual(destination.read_text(), "old instructions")
+        self.run_script("install-agents.sh", b"2\ny\n", command=command)
+        self.assertEqual(destination.read_text(), "remote instructions\n")
+        self.assertEqual(list(destination.parent.glob("*.backup-*")), [])
+        self.write(destination, "backup me")
+        self.run_script("install-agents.sh", b"1\ny\n", command=command)
+        backups = list(destination.parent.glob("*.backup-*"))
+        self.assertEqual(len(backups), 1)
+        self.assertEqual(backups[0].read_text(), "backup me")
+
+    def test_install_backup_mode_cancel_changes_nothing(self):
+        destination = self.home / ".codex/AGENTS.md"
+        self.write(destination, "unchanged")
+        self.run_script("install-agents.sh", b"4\nq\n")
+        self.assertEqual(destination.read_text(), "unchanged")
+        self.assertEqual(list(destination.parent.glob("*.backup-*")), [])
+        self.assertFalse((self.home / ".claude").exists())
+        self.assertFalse((self.root / "curl.log").exists())
+        command = ["bash", str(self.repo / "scripts/install-agents.sh"), str(destination)]
+        self.run_script("install-agents.sh", b"3\n", command=command)
+        self.assertFalse((self.root / "curl.log").exists())
+
+    def test_install_backup_mode_eof_cancels_without_downloading(self):
+        destination = self.home / "missing/AGENTS.md"
+        result = subprocess.run(
+            ["bash", str(self.repo / "scripts/install-agents.sh"), str(destination)],
+            input="", text=True, capture_output=True, env=self.env,
+        )
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("Cancelled", result.stdout)
+        self.assertFalse(destination.parent.exists())
+        self.assertFalse((self.root / "curl.log").exists())
+
+    def test_install_backup_flags_skip_menus(self):
+        destination = self.home / "flag path/AGENTS.md"
+        for flag in ("--backup", "--no-backup"):
+            with self.subTest(flag=flag):
+                self.write(destination, "flag original")
+                result = subprocess.run(
+                    ["bash", str(self.repo / "scripts/install-agents.sh"), flag, str(destination)],
+                    input="yes\n", text=True, capture_output=True, env=self.env,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertNotIn("Backup mode:", result.stderr)
+                self.assertNotIn("Destination:", result.stderr)
+                self.assertEqual(destination.read_text(), "remote instructions\n")
+                backups = list(destination.parent.glob("*.backup-*"))
+                self.assertEqual(len(backups), int(flag == "--backup"))
+                for backup in backups:
+                    self.assertEqual(backup.read_text(), "flag original")
+                    backup.unlink()
+
+        self.write(destination, "declined")
+        result = subprocess.run(
+            ["bash", str(self.repo / "scripts/install-agents.sh"), str(destination), "--no-backup"],
+            input="no\n", text=True, capture_output=True, env=self.env,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(destination.read_text(), "declined")
+        self.assertEqual(list(destination.parent.glob("*.backup-*")), [])
+
+    def test_install_backup_flag_keeps_destination_menu(self):
+        destination = self.home / ".codex/AGENTS.md"
+        self.write(destination, "flag original")
+        output = self.run_script(
+            "install-agents.sh", b"2\ny\n",
+            command=["bash", str(self.repo / "scripts/install-agents.sh"), "--no-backup"],
+        )
+        self.assertIn("Destination:", output)
+        self.assertNotIn("Backup mode:", output)
+        self.assertEqual(destination.read_text(), "remote instructions\n")
+        self.assertEqual(list(destination.parent.glob("*.backup-*")), [])
+
+    def test_install_backup_flag_new_destination_and_option_terminator(self):
+        destination = self.root / "--instructions.md"
+        result = subprocess.run(
+            ["bash", str(self.repo / "scripts/install-agents.sh"), "--backup", "--", destination.name],
+            input="", text=True, capture_output=True, env=self.env, cwd=self.root,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(destination.read_text(), "remote instructions\n")
+        self.assertFalse((self.root / "curl.log").read_text().splitlines()[-1] == "")
+        self.assertEqual(list(self.root.glob("*.backup-*")), [])
+
+    def test_install_invalid_arguments_change_nothing(self):
+        destination = self.home / "flag path/AGENTS.md"
+        self.write(destination, "unchanged")
+        for arguments in (
+            ["--backup", "--no-backup", str(destination)],
+            ["--no-backup", "--backup", str(destination)],
+            ["--unknown", str(destination)],
+            ["--backup", str(destination), "extra.md"],
+            ["--no-backup", ""],
+        ):
+            with self.subTest(arguments=arguments):
+                result = subprocess.run(
+                    ["bash", str(self.repo / "scripts/install-agents.sh"), *arguments],
+                    input="", text=True, capture_output=True, env=self.env,
+                )
+                self.assertNotEqual(result.returncode, 0)
+                self.assertEqual(destination.read_text(), "unchanged")
+                self.assertFalse((self.root / "curl.log").exists())
+                self.assertEqual(list(destination.parent.glob("*.backup-*")), [])
 
     def test_download_failure_and_empty_response_leave_destinations_alone(self):
         destination = self.home / ".codex/AGENTS.md"
@@ -141,7 +264,7 @@ printf '%s\\n' "$destination" >> "$FAKE_CURL_LOG"
         for overrides in ({"FAKE_CURL_EXIT": "22"}, {"FAKE_CURL_EMPTY": "1"}):
             result = subprocess.run(
                 ["bash", str(self.repo / "scripts/install-agents.sh"), str(destination)],
-                input="yes\n", text=True, capture_output=True, env=dict(self.env, **overrides),
+                input="1\nyes\n", text=True, capture_output=True, env=dict(self.env, **overrides),
             )
             self.assertNotEqual(result.returncode, 0)
             self.assertEqual(destination.read_text(), "unchanged")

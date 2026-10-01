@@ -23,10 +23,15 @@ try {
     $actualMenu = ${function:Select-ArrowMenu}
     # Inject mocks only into sandbox copies, not the repository implementation.
     $mocks = @'
-function Assert-InteractiveTerminal {}
+function Assert-InteractiveTerminal { $global:InteractiveCheckCount++ }
 function Select-ArrowMenu {
     param($Title, $Items, [switch]$Multiple)
     if ($Title -eq 'Choose how to import selected skills') { return $global:SkillImportMode }
+    if ($Title -eq 'Choose how to handle existing instruction files') {
+        $global:BackupMenuCount++
+        $global:CapturedBackupMultiple = [bool]$Multiple
+        return $global:BackupMode
+    }
     $global:CapturedItems = $Items
     $global:CapturedMultiple = [bool]$Multiple
     $global:MenuSelection
@@ -48,7 +53,7 @@ function Invoke-WebRequest {
 '@
     # Place a standalone installer outside the repo, as if downloaded from GitHub.
     $standalone = Join-Path $root 'install-agents.ps1'
-    $entry = 'Invoke-AgentsInstall -Destination @($Destination) -Ref $Ref'
+    $entry = 'Invoke-AgentsInstall -Destination @($Destination) -Ref $Ref -Backup:$Backup -NoBackup:$NoBackup'
     $installer = Get-Content -LiteralPath (Join-Path $repo 'scripts/install-agents.ps1') -Raw
     Invoke-Expression ($installer.Replace($entry, ''))
     $actualInstallerMenu = ${function:Select-ArrowMenu}
@@ -58,13 +63,18 @@ function Invoke-WebRequest {
     $global:OverwriteAnswer = 'yes'
     $global:MenuSelection = @(0, 1, 2)
     $global:SkillImportMode = @(0)
+    $global:BackupMode = @(0)
+    $global:BackupMenuCount = 0
+    $global:InteractiveCheckCount = 0
     $global:DownloadCount = 0
     $global:DownloadFails = $false
     $global:RemoteContent = "remote instructions`n"
     Write-Fixture (Join-Path $repo 'AGENTS.md') "repository instructions`n"
     Write-Fixture (Join-Path $HOME '.claude/CLAUDE.md') 'previous Claude instructions'
-    & $standalone -Ref 'test-ref'
+    $installOutput = (& $standalone -Ref 'test-ref' 6>&1 | Out-String)
     Assert-True $global:CapturedMultiple 'installer uses multi-select'
+    Assert-True (-not $global:CapturedBackupMultiple) 'backup mode is single-select'
+    Assert-True ($installOutput.Contains((Join-Path $HOME '.claude/CLAUDE.md'))) 'existing destination listed'
     Assert-True ($global:DownloadCount -eq 1) 'one download for multiple targets'
     Assert-True ($global:DownloadUri -eq 'https://raw.githubusercontent.com/lioqing/.agents/test-ref/AGENTS.md') 'requested ref used'
     Assert-True (-not (Test-Path -LiteralPath $global:DownloadPath)) 'temporary download removed'
@@ -100,6 +110,68 @@ function Invoke-WebRequest {
     & $standalone
     Assert-True (Test-Path -LiteralPath $global:OverwriteAnswer) 'custom menu destination works'
     $global:OverwriteAnswer = 'yes'
+
+    # Explicit destinations still show the backup menu, and no-backup applies to all.
+    $secondCustom = Join-Path $HOME 'second custom/AGENTS.md'
+    Write-Fixture $custom 'old custom instructions'
+    Write-Fixture $secondCustom 'old second instructions'
+    $global:BackupMode = @(1)
+    $installOutput = (& $standalone -Destination @($custom, $secondCustom) 6>&1 | Out-String)
+    foreach ($path in @($custom, $secondCustom)) {
+        Assert-True ($installOutput.Contains($path)) 'each existing destination listed'
+        Assert-True ((Get-Content -LiteralPath $path -Raw) -eq "remote instructions`n") 'no-backup overwrites destination'
+        Assert-True (@(Get-ChildItem -LiteralPath (Split-Path -Parent $path) -Filter '*.backup-*').Count -eq 0) 'no backup created when disabled'
+    }
+    $global:OverwriteAnswer = 'no'
+    Write-Fixture $custom 'declined without backup'
+    & $standalone -Destination $custom
+    Assert-True ((Get-Content -LiteralPath $custom -Raw) -eq 'declined without backup') 'no-backup still requires overwrite confirmation'
+    $global:OverwriteAnswer = 'yes'
+    Write-Fixture $custom "remote instructions`n"
+
+    $global:BackupMode = @()
+    $beforeCancel = $global:DownloadCount
+    $missing = Join-Path $HOME 'cancel backup/AGENTS.md'
+    & $standalone -Destination @($custom, $missing)
+    Assert-True ($global:DownloadCount -eq $beforeCancel) 'backup menu cancellation does not download'
+    Assert-True ((Get-Content -LiteralPath $custom -Raw) -eq "remote instructions`n") 'backup menu cancellation preserves existing file'
+    Assert-True (-not (Test-Path -LiteralPath (Split-Path -Parent $missing))) 'backup menu cancellation creates no directories'
+
+    # Switches bypass the backup menu and terminal check even with redirected I/O.
+    $flagDestination = Join-Path $HOME 'flag path/AGENTS.md'
+    Write-Fixture $flagDestination 'flag original'
+    $beforeMenu = $global:BackupMenuCount
+    $beforeTerminal = $global:InteractiveCheckCount
+    & $standalone -Destination @($flagDestination, $missing) -NoBackup
+    foreach ($path in @($flagDestination, $missing)) {
+        Assert-True ((Get-Content -LiteralPath $path -Raw) -eq "remote instructions`n") 'no-backup switch applies to all destinations'
+        Assert-True (@(Get-ChildItem -LiteralPath (Split-Path -Parent $path) -Filter '*.backup-*').Count -eq 0) 'no-backup switch creates no backup'
+    }
+    Write-Fixture $flagDestination 'flag backup original'
+    & $standalone -Destination $flagDestination -Backup
+    $flagBackups = @(Get-ChildItem -LiteralPath (Split-Path -Parent $flagDestination) -Filter '*.backup-*')
+    Assert-True ($flagBackups.Count -eq 1) 'backup switch creates backup'
+    Assert-True ((Get-Content -LiteralPath $flagBackups[0].FullName -Raw) -eq 'flag backup original') 'backup switch preserves old content'
+    Assert-True ($global:BackupMenuCount -eq $beforeMenu) 'switches skip backup menu'
+    Assert-True ($global:InteractiveCheckCount -eq $beforeTerminal) 'explicit destination and switch need no interactive terminal'
+
+    $global:OverwriteAnswer = 'no'
+    Write-Fixture $flagDestination 'flag declined'
+    & $standalone -Destination $flagDestination -NoBackup
+    Assert-True ((Get-Content -LiteralPath $flagDestination -Raw) -eq 'flag declined') 'switch still requires overwrite confirmation'
+    $global:OverwriteAnswer = 'yes'
+    $beforeDownload = $global:DownloadCount
+    $failed = $false
+    try { & $standalone -Destination $flagDestination -Backup -NoBackup } catch { $failed = $true }
+    Assert-True $failed 'conflicting backup switches rejected'
+    Assert-True ($global:DownloadCount -eq $beforeDownload) 'conflicting switches do not download'
+    Assert-True ((Get-Content -LiteralPath $flagDestination -Raw) -eq 'flag declined') 'conflicting switches change nothing'
+
+    $global:MenuSelection = @(1)
+    & $standalone -NoBackup
+    Assert-True $global:CapturedMultiple 'switch without destination retains destination menu'
+    Assert-True ($global:BackupMenuCount -eq $beforeMenu) 'switch without destination skips backup menu'
+    $global:BackupMode = @(0)
 
     $global:DownloadFails = $true
     $failed = $false
@@ -246,6 +318,14 @@ function Invoke-WebRequest {
     $global:KeyIndex = 0
     $indexes = @(& $actualInstallerMenu -Title 'Standalone installer menu test' -Items $menuItems[1..2] -Multiple)
     Assert-True (($indexes -join ',') -eq '0,1') 'standalone installer menu multi-select'
+    $global:Keys = @('Enter')
+    $global:KeyIndex = 0
+    $indexes = @(& $actualInstallerMenu -Title 'Standalone backup default test' -Items $menuItems[1..2])
+    Assert-True (($indexes -join ',') -eq '0') 'standalone single-select defaults to backup'
+    $global:Keys = @('Spacebar', 'DownArrow', 'Enter')
+    $global:KeyIndex = 0
+    $indexes = @(& $actualInstallerMenu -Title 'Standalone no-backup test' -Items $menuItems[1..2])
+    Assert-True (($indexes -join ',') -eq '1') 'standalone single-select chooses highlighted mode'
     $global:Keys = @('Escape')
     $global:KeyIndex = 0
     $indexes = @(& $actualInstallerMenu -Title 'Standalone installer cancel test' -Items $menuItems[1..2] -Multiple)
@@ -255,5 +335,5 @@ function Invoke-WebRequest {
     Set-Variable -Name HOME -Value $originalHome -Scope Script -Force
     # Only remove the unique sandbox created by this test.
     if (Test-Path -LiteralPath $root) { Remove-Item -LiteralPath $root -Recurse -Force }
-    Remove-Variable MenuSelection, SkillImportMode, OverwriteAnswer, CapturedItems, CapturedMultiple, Keys, KeyIndex, RemoteContent, DownloadCount, DownloadUri, DownloadPath, DownloadFails -Scope Global -ErrorAction SilentlyContinue
+    Remove-Variable MenuSelection, SkillImportMode, BackupMode, BackupMenuCount, InteractiveCheckCount, OverwriteAnswer, CapturedItems, CapturedMultiple, CapturedBackupMultiple, Keys, KeyIndex, RemoteContent, DownloadCount, DownloadUri, DownloadPath, DownloadFails -Scope Global -ErrorAction SilentlyContinue
 }

@@ -4,29 +4,28 @@ My shared agent instructions (`AGENTS.md`) and reusable skills (`skills/`).
 
 ## Install skills
 
-Requires Node.js/npm. Run:
+Requires Node.js/npm:
 
 ```sh
 npx skills add lioqing/.agents
 ```
 
-Follow the CLI prompts to choose skills and agents.
+Choose skills and agents when prompted.
 
 ## Install agent instructions
 
-No clone is required. Both installers are standalone and download this
-repository's `AGENTS.md` from GitHub. Review the scripts before executing them.
+No clone required. Installers download `AGENTS.md` from GitHub.
+Review the scripts before running them.
 
-PowerShell 5.0+ (including Windows PowerShell 5.1):
+PowerShell 5.0+:
 
 ```powershell
 irm https://raw.githubusercontent.com/lioqing/.agents/master/scripts/install-agents.ps1 | iex
 ```
 
 > [!NOTE]
-> On older Windows PowerShell configurations, the download may fail with
-> "Could not create SSL/TLS secure channel." Enable TLS 1.2 in the current
-> PowerShell session, then retry:
+> If Windows PowerShell reports "Could not create SSL/TLS secure channel,"
+> enable TLS 1.2, then retry:
 >
 > ```powershell
 > [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
@@ -38,11 +37,10 @@ Bash:
 installer=$(curl -fsSL https://raw.githubusercontent.com/lioqing/.agents/master/scripts/install-agents.sh) && bash -c "$installer"
 ```
 
-Use `bash -c`, **not** `curl | bash`: Bash's built-in `select` and overwrite
-prompts read standard input. The command above leaves it available without
-requiring `/dev/tty`, and only executes the installer if its download succeeds.
+Use `bash -c`, not `curl | bash`, so prompts can read standard input.
+The command runs only if the download succeeds.
 
-Alternatively, download the installer first or run it from a clone:
+From a clone or downloaded script:
 
 ```powershell
 pwsh -File ./scripts/install-agents.ps1
@@ -52,9 +50,10 @@ pwsh -File ./scripts/install-agents.ps1
 bash ./scripts/install-agents.sh
 ```
 
-PowerShell keeps the arrow-key multi-select menu. Bash uses a numbered `select`
-prompt: choose one agent, **All three**, **Custom path**, or **Cancel**.
-The default destinations are:
+- PowerShell: arrow-key multi-select.
+- Bash: numbered menu with one agent, **All three**, **Custom path**, or **Cancel**.
+
+Default destinations:
 
 | Agent | Destination |
 | --- | --- |
@@ -62,7 +61,7 @@ The default destinations are:
 | Codex | `~/.codex/AGENTS.md` |
 | OpenCode | `~/.config/opencode/AGENTS.md` |
 
-To bypass the destination menu and specify a file yourself:
+Skip the destination menu with a custom file:
 
 ```powershell
 pwsh -File ./scripts/install-agents.ps1 -Destination /desired/path/AGENTS.md
@@ -72,22 +71,41 @@ pwsh -File ./scripts/install-agents.ps1 -Destination /desired/path/AGENTS.md
 bash ./scripts/install-agents.sh /desired/path/AGENTS.md
 ```
 
-Installers fetch `AGENTS.md` from `master` by default. Set `AGENTS_REF` to a
-branch, tag, or commit SHA to override it (PowerShell also accepts `-Ref`).
+- A second menu lists existing files and asks whether to back them up.
+- The choice applies to all destinations, including custom paths.
+- PowerShell defaults to backup; Bash requires a number and Enter.
+- Cancelling either menu changes nothing and downloads no instructions.
 
-To pin both the installer and instructions, replace `master` in the installer
-URL and set `AGENTS_REF` to the same ref. Even from a clone, installers download
-the remote file, not the local copy.
+Skip the backup menu with these mutually exclusive options:
 
-- Missing parent directories are created.
-- Existing files require `y` or `yes` to overwrite; any other answer skips that
-  destination. Backups are saved beside the original as
-  `<filename>.backup-<timestamp>-<unique suffix>`.
-- Directories and symbolic links are not overwritten.
-- Downloads use temporary files, cleaned up afterward. Failed or empty downloads
-  change no destinations.
+| Mode | PowerShell | Bash |
+| --- | --- | --- |
+| Back up | `-Backup` | `--backup` |
+| No backup | `-NoBackup` | `--no-backup` |
 
-## Development: bring local files into this repo
+Specify a destination too to skip both menus. Overwrite confirmation still applies:
+
+```powershell
+pwsh -File ./scripts/install-agents.ps1 -Destination /desired/path/AGENTS.md -Backup
+```
+
+```bash
+bash ./scripts/install-agents.sh --backup /desired/path/AGENTS.md
+```
+
+- Bash accepts options before or after the destination; use `--` before paths starting with `-`.
+- Instructions come from remote `master`, even when running from a clone.
+- Override with `AGENTS_REF` (branch, tag, or commit) or PowerShell's `-Ref`.
+- To pin both scripts and instructions, replace `master` in the URL and set `AGENTS_REF` to the same ref.
+
+Safety:
+
+- Missing parent directories are created; directories and symbolic links are never overwritten.
+- Overwriting requires `y` or `yes`, regardless of backup mode; other answers skip that file.
+- Backups use `<filename>.backup-<timestamp>-<unique suffix>` beside the original.
+- Failed or empty downloads leave destinations unchanged; temporary downloads are cleaned up.
+
+## Development: import local files
 
 ### Import installed skills
 
@@ -99,32 +117,20 @@ pwsh -File ./scripts/import-skills.ps1
 bash ./scripts/import-skills.sh
 ```
 
-The menu lists skill directories in `~/.agents/skills` containing `SKILL.md`.
-Select skills to import into this repository's `skills/` folder, then
-choose **Copy** (the default, keeps originals) or **Move** (removes originals).
-Cancelling either menu leaves all files unchanged.
+- Select skills containing `SKILL.md` from `~/.agents/skills` to import into `skills/`.
+- Choose **Copy** (default, keeps originals) or **Move**. Cancelling changes nothing.
+- Existing repo names are unavailable; nothing is overwritten.
+- Copies include hidden files and resources, following symbolic links for self-contained copies.
+- Move removes originals only after all copies succeed. Links and junctions are removed without deleting their targets.
+- Failed copies keep all originals; failed removals may leave originals behind.
 
-- Multiple skills can be selected. Names already in the repo are **unavailable**,
-  even if the existing entry is not a directory. Nothing is overwritten.
-- Copies include the entire directory, hidden files and supporting resources.
-  Installed symbolic links are followed to create self-contained copies.
-
-Move removes originals only after **all** selected skills copy successfully.
-Symbolic links and junctions, including links inside a skill, are removed without
-deleting their targets.
-
-A failed copy keeps all originals. A failed removal may leave some originals
-behind, but all repo copies are already present.
-
-After importing, the script reminds you to review, commit and push the skills,
-then reinstall/update your home-directory skills (requires Node.js/npm):
+Review, commit, and push imports, then update installed skills:
 
 ```sh
 npx skills add lioqing/.agents --global
 ```
 
-This command is displayed only, never run automatically. Follow its prompts to
-choose skills and agents. Push first so the remote repository contains your imports.
+The script displays this command but never runs it. Push first, then choose skills and agents when prompted.
 
 ### Import agent instructions
 
@@ -136,46 +142,39 @@ pwsh -File ./scripts/import-agents.ps1
 bash ./scripts/import-agents.sh
 ```
 
-Choose **one** of the Claude, Codex, or OpenCode files listed above to copy
-into this repository's `AGENTS.md`. Missing sources are marked unavailable.
-An existing repo file requires confirmation and receives a backup first.
-Files are copied verbatim; instructions are not merged.
+- Choose one Claude, Codex, or OpenCode file to copy into the repo's `AGENTS.md`.
+- Missing sources are unavailable.
+- Replacing an existing repo file requires confirmation and creates a backup.
+- Files are copied verbatim, not merged.
 
 ## Menu controls and requirements
 
-These arrow-key controls apply to the import scripts and the PowerShell installer.
-The Bash installer instead accepts the displayed number followed by Enter;
-choose **Cancel** or enter **q** to cancel.
+Import scripts and the PowerShell installer use arrow-key menus:
 
-- **Up/Down**: move between choices (menus page automatically after ten rows).
-- **Space**: toggle a choice in multi-select menus.
-- **Enter**: confirm selected choices, or choose the highlighted single source.
-- **Esc** or **q**: cancel without copying. Multi-select menus need at least one selection.
-- `[-]` means unavailable; `[x]` means selected.
+| Key | Action |
+| --- | --- |
+| Up/Down | Navigate; menus page after ten rows |
+| Space | Toggle multi-select choices |
+| Enter | Confirm; multi-select needs at least one choice |
+| Esc or q | Cancel |
 
-- PowerShell scripts require **PowerShell 5.0+**. For Windows PowerShell 5.x,
-  replace `pwsh` with `powershell` in all commands.
-- Bash scripts require **Bash 3.2+** and `cp`, `mkdir`, `rm`, and `date`
-  (macOS, Linux, WSL, or Git Bash). The installer also needs `curl` and `mktemp`.
-- Neither version needs an external menu package.
-- Arrow-key menus require an interactive ANSI-capable terminal without redirected
-  input/output. At least 80 columns and 15 rows are recommended.
-- Bash import menus also accept **j/k** for down/up. On Bash 3.2, **Esc** may
-  take one second to cancel; **q** is immediate.
+`[-]` means unavailable; `[x]` means selected.
+Bash imports also accept **j/k**; on Bash 3.2, **Esc** may take one second, while **q** is immediate.
 
-Default destinations use the current user's home directory (the Linux home under
-WSL, not the Windows home). Import scripts locate the repo from their own location;
-installers need no checkout.
+The Bash installer uses numbers followed by Enter; choose **Cancel** or enter **q** to quit.
 
-Scripts do not automatically install skills or commit changes. Only explicitly
-selected **Move** imports delete original skills.
-
-A failed copy can leave a partial destination; inspect it before retrying.
-Review imported files and backups before committing.
+- PowerShell: **5.0+**; replace `pwsh` with `powershell` on Windows PowerShell 5.x.
+- Bash: **3.2+**, `cp`, `mkdir`, `rm`, and `date` (macOS, Linux, WSL, or Git Bash).
+  Installation also needs `curl` and `mktemp`.
+- Arrow-key menus need an interactive ANSI terminal with no redirected input/output, including custom-path installs without a backup option. Recommended size: 80 × 15.
+- No external menu package is needed.
+- Paths use the current user's home (Linux home under WSL). Import scripts find the repo from their own location.
+- Scripts never install skills or commit automatically; only **Move** deletes originals.
+- Failed copies may leave partial destinations. Inspect before retrying; review imports and backups before committing.
 
 ## Tests
 
-Tests use temporary homes and repository copies, leaving personal files alone:
+Tests use temporary homes and repo copies; personal files are untouched:
 
 ```powershell
 pwsh -File ./tests/test-scripts.ps1
@@ -185,6 +184,6 @@ pwsh -File ./tests/test-scripts.ps1
 python3 ./tests/test_bash.py
 ```
 
-The PowerShell tests mock keyboard input; the Bash tests exercise the actual
-menus in a pseudo-terminal. Installer downloads are mocked, so tests require
-no GitHub access. Bash tests require macOS/Linux/WSL and Python 3.
+- PowerShell tests mock keyboard input; Bash tests run menus in a pseudo-terminal.
+- Downloads are mocked; no GitHub access is needed.
+- Bash tests require macOS/Linux/WSL and Python 3.
