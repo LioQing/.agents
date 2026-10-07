@@ -1,57 +1,70 @@
 ---
 version: alpha
-name: Quiet Report
-description: Deterministic visual system for single-page evidence-led reports, using Google's DESIGN.md format, not Google branding or Material page layouts.
+name: Northstar Report
+description: The original Northstar API report design, expressed in Google's DESIGN.md format without changing its visual identity or layout.
 colors:
-  primary: "#18181b"
-  secondary: "#52525b"
+  primary: "#09090b"
+  secondary: "#3f3f46"
   tertiary: "#1d4ed8"
   neutral: "#ffffff"
-  surface: "#fafafa"
-  border: "#d4d4d8"
-  hover: "#f4f4f5"
-  on-accent: "#ffffff"
-  accent-hover: "#1e40af"
-  info: "#1d4ed8"
+  muted: "#71717a"
+  description: "#52525b"
+  border: "#e4e4e7"
+  control-border: "#d4d4d8"
+  open-border: "#a1a1aa"
+  hover: "#fafafa"
+  badge-surface: "#f4f4f5"
+  callout-text: "#27272a"
   success: "#047857"
-  warning: "#92400e"
+  success-border: "#6ee7b7"
+  warning: "#b45309"
+  warning-border: "#fcd34d"
   danger: "#b91c1c"
-  tip: "#6d28d9"
+  danger-border: "#fca5a5"
+  focus: "#3b82f6"
   dark-primary: "#f4f4f5"
-  dark-secondary: "#a1a1aa"
-  dark-tertiary: "#93c5fd"
-  dark-neutral: "#09090b"
-  dark-surface: "#18181b"
-  dark-border: "#52525b"
-  dark-hover: "#27272a"
-  dark-on-accent: "#09090b"
-  dark-accent-hover: "#bfdbfe"
-  dark-info: "#93c5fd"
-  dark-success: "#6ee7b7"
-  dark-warning: "#fcd34d"
-  dark-danger: "#fca5a5"
-  dark-tip: "#c4b5fd"
+  dark-secondary: "#d4d4d8"
+  dark-tertiary: "#60a5fa"
+  dark-neutral: "#000000"
+  dark-muted: "#a1a1aa"
+  dark-description: "#a1a1aa"
+  dark-border: "#27272a"
+  dark-control-border: "#3f3f46"
+  dark-open-border: "#52525b"
+  dark-hover: "#18181b"
+  dark-badge-surface: "#18181b"
+  dark-callout-text: "#e4e4e7"
+  dark-success: "#34d399"
+  dark-success-border: "#064e3b"
+  dark-warning: "#fbbf24"
+  dark-warning-border: "#78350f"
+  dark-danger: "#f87171"
+  dark-danger-border: "#7f1d1d"
   code-background: "#0d0d0d"
   code-text: "#f4f4f5"
   code-muted: "#a1a1aa"
-  code-border: "#52525b"
+  code-border: "#27272a"
+  chart-primary: "#2563eb"
+  chart-primary-fill: "#2563eb18"
+  chart-secondary: "#a1a1aa"
 typography:
-  h1: { fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', fontSize: 40px, fontWeight: 600, lineHeight: 1.15, letterSpacing: -0.035em }
-  h1-mobile: { fontFamily: system-ui, fontSize: 32px, fontWeight: 600, lineHeight: 1.2, letterSpacing: -0.035em }
-  h2: { fontFamily: system-ui, fontSize: 28px, fontWeight: 600, lineHeight: 1.25, letterSpacing: -0.02em }
-  h2-mobile: { fontFamily: system-ui, fontSize: 24px, fontWeight: 600, lineHeight: 1.3, letterSpacing: -0.02em }
-  h3: { fontFamily: system-ui, fontSize: 20px, fontWeight: 600, lineHeight: 1.4 }
-  lead: { fontFamily: system-ui, fontSize: 18px, fontWeight: 400, lineHeight: 1.7 }
-  body: { fontFamily: system-ui, fontSize: 16px, fontWeight: 400, lineHeight: 1.75 }
-  small: { fontFamily: system-ui, fontSize: 14px, fontWeight: 400, lineHeight: 1.6 }
-  caption: { fontFamily: system-ui, fontSize: 12px, fontWeight: 400, lineHeight: 1.6 }
-  label: { fontFamily: system-ui, fontSize: 12px, fontWeight: 600, lineHeight: 1.5, letterSpacing: 0.1em }
-  control: { fontFamily: system-ui, fontSize: 14px, fontWeight: 500, lineHeight: 1.5 }
-  metric: { fontFamily: system-ui, fontSize: 28px, fontWeight: 600, lineHeight: 1.2, fontFeature: '"tnum"' }
-  code: { fontFamily: 'ui-monospace, "Cascadia Code", "SFMono-Regular", Consolas, monospace', fontSize: 13px, fontWeight: 400, lineHeight: 1.7 }
+  h1: { fontFamily: 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', fontSize: 48px, fontWeight: 600, lineHeight: 1, letterSpacing: -0.035em }
+  h1-mobile: { fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif', fontSize: 36px, fontWeight: 600, lineHeight: 40px, letterSpacing: -0.035em }
+  h2: { fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif', fontSize: 30px, fontWeight: 600, lineHeight: 36px, letterSpacing: -0.025em }
+  h2-mobile: { fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif', fontSize: 24px, fontWeight: 600, lineHeight: 32px, letterSpacing: -0.025em }
+  lead: { fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif', fontSize: 18px, fontWeight: 400, lineHeight: 32px }
+  body: { fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif', fontSize: 15px, fontWeight: 400, lineHeight: 28px }
+  small: { fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif', fontSize: 14px, fontWeight: 400, lineHeight: 24px }
+  nav: { fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif', fontSize: 14px, fontWeight: 400, lineHeight: 20px }
+  caption: { fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif', fontSize: 12px, fontWeight: 400, lineHeight: 20px }
+  label: { fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif', fontSize: 12px, fontWeight: 600, lineHeight: 16px, letterSpacing: 0.14em }
+  control: { fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif', fontSize: 12px, fontWeight: 500, lineHeight: 16px }
+  metric: { fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif', fontSize: 24px, fontWeight: 600, lineHeight: 32px, fontFeature: '"tnum"' }
+  code: { fontFamily: 'SFMono-Regular, "Cascadia Code", "Roboto Mono", ui-monospace, monospace', fontSize: 16px, fontWeight: 400, lineHeight: 24px }
 rounded:
   none: 0px
-  control: 6px
+  copy: 4px
+  input: 6px
   container: 8px
   callout: 12px
   pill: 9999px
@@ -60,515 +73,457 @@ spacing:
   sm: 8px
   md: 12px
   lg: 16px
+  callout: 20px
   xl: 24px
-  xxl: 32px
+  component: 32px
+  metric: 40px
+  header-padding: 48px
+  gutter: 56px
+  header-gap: 64px
   section: 80px
-  section-mobile: 56px
+  page-padding: 96px
   frame: 1180px
   reading: 820px
   rail: 200px
-  gutter: 56px
   margin: 40px
   margin-mobile: 24px
 components:
-  page: { backgroundColor: "{colors.neutral}", textColor: "{colors.primary}", typography: "{typography.body}" }
+  page: { backgroundColor: "{colors.neutral}", textColor: "{colors.primary}" }
   page-dark: { backgroundColor: "{colors.dark-neutral}", textColor: "{colors.dark-primary}" }
-  secondary-text: { backgroundColor: "{colors.neutral}", textColor: "{colors.secondary}" }
-  secondary-text-dark: { backgroundColor: "{colors.dark-neutral}", textColor: "{colors.dark-secondary}" }
-  button-primary: { backgroundColor: "{colors.tertiary}", textColor: "{colors.on-accent}", typography: "{typography.control}", rounded: "{rounded.control}", height: 44px, padding: 12px }
-  button-primary-hover: { backgroundColor: "{colors.accent-hover}", textColor: "{colors.on-accent}" }
-  button-primary-dark: { backgroundColor: "{colors.dark-tertiary}", textColor: "{colors.dark-on-accent}" }
-  button-primary-dark-hover: { backgroundColor: "{colors.dark-accent-hover}", textColor: "{colors.dark-on-accent}" }
-  button-secondary: { backgroundColor: "{colors.neutral}", textColor: "{colors.primary}", rounded: "{rounded.control}", height: 44px }
-  button-secondary-hover: { backgroundColor: "{colors.hover}" }
-  button-secondary-dark: { backgroundColor: "{colors.dark-neutral}", textColor: "{colors.dark-primary}" }
-  button-secondary-dark-hover: { backgroundColor: "{colors.dark-hover}" }
-  input: { backgroundColor: "{colors.neutral}", textColor: "{colors.primary}", rounded: "{rounded.control}", height: 44px, typography: "{typography.control}" }
-  input-dark: { backgroundColor: "{colors.dark-neutral}", textColor: "{colors.dark-primary}" }
-  panel: { backgroundColor: "{colors.surface}", textColor: "{colors.primary}", rounded: "{rounded.container}", padding: 24px }
-  panel-dark: { backgroundColor: "{colors.dark-surface}", textColor: "{colors.dark-primary}" }
-  note: { backgroundColor: "{colors.neutral}", textColor: "{colors.secondary}", rounded: "{rounded.callout}", padding: 16px }
-  info: { backgroundColor: "{colors.neutral}", textColor: "{colors.info}" }
+  prose: { backgroundColor: "{colors.neutral}", textColor: "{colors.secondary}", typography: "{typography.body}" }
+  prose-dark: { backgroundColor: "{colors.dark-neutral}", textColor: "{colors.dark-secondary}" }
+  caption: { backgroundColor: "{colors.neutral}", textColor: "{colors.muted}", typography: "{typography.caption}" }
+  caption-dark: { backgroundColor: "{colors.dark-neutral}", textColor: "{colors.dark-muted}" }
+  description: { backgroundColor: "{colors.neutral}", textColor: "{colors.description}" }
+  description-dark: { backgroundColor: "{colors.dark-neutral}", textColor: "{colors.dark-description}" }
+  section-label: { backgroundColor: "{colors.neutral}", textColor: "{colors.tertiary}" }
+  section-label-dark: { backgroundColor: "{colors.dark-neutral}", textColor: "{colors.dark-tertiary}" }
+  toolbar-button: { backgroundColor: "{colors.neutral}", textColor: "{colors.primary}", typography: "{typography.control}", rounded: "{rounded.pill}", height: 36px }
+  toolbar-button-dark: { backgroundColor: "{colors.dark-neutral}", textColor: "{colors.dark-primary}" }
+  toolbar-button-hover: { backgroundColor: "{colors.hover}" }
+  toolbar-button-dark-hover: { backgroundColor: "{colors.dark-hover}" }
+  input: { backgroundColor: "{colors.neutral}", textColor: "{colors.description}", rounded: "{rounded.input}", typography: "{typography.small}" }
+  input-dark: { backgroundColor: "{colors.dark-neutral}", textColor: "{colors.dark-description}" }
+  callout: { backgroundColor: "{colors.neutral}", textColor: "{colors.callout-text}", rounded: "{rounded.callout}", typography: "{typography.small}" }
+  callout-dark: { backgroundColor: "{colors.dark-neutral}", textColor: "{colors.dark-callout-text}" }
   success: { backgroundColor: "{colors.neutral}", textColor: "{colors.success}" }
-  warning: { backgroundColor: "{colors.neutral}", textColor: "{colors.warning}" }
-  danger: { backgroundColor: "{colors.neutral}", textColor: "{colors.danger}" }
-  tip: { backgroundColor: "{colors.neutral}", textColor: "{colors.tip}" }
-  note-dark: { backgroundColor: "{colors.dark-neutral}", textColor: "{colors.dark-secondary}" }
-  info-dark: { backgroundColor: "{colors.dark-neutral}", textColor: "{colors.dark-info}" }
   success-dark: { backgroundColor: "{colors.dark-neutral}", textColor: "{colors.dark-success}" }
+  warning: { backgroundColor: "{colors.neutral}", textColor: "{colors.warning}" }
   warning-dark: { backgroundColor: "{colors.dark-neutral}", textColor: "{colors.dark-warning}" }
+  danger: { backgroundColor: "{colors.neutral}", textColor: "{colors.danger}" }
   danger-dark: { backgroundColor: "{colors.dark-neutral}", textColor: "{colors.dark-danger}" }
-  tip-dark: { backgroundColor: "{colors.dark-neutral}", textColor: "{colors.dark-tip}" }
+  badge: { backgroundColor: "{colors.badge-surface}", textColor: "{colors.description}", rounded: "{rounded.pill}" }
+  badge-dark: { backgroundColor: "{colors.dark-badge-surface}", textColor: "{colors.dark-description}" }
   code: { backgroundColor: "{colors.code-background}", textColor: "{colors.code-text}", typography: "{typography.code}", rounded: "{rounded.container}" }
-  code-toolbar: { backgroundColor: "{colors.code-background}", textColor: "{colors.code-muted}" }
+  code-caption: { backgroundColor: "{colors.code-background}", textColor: "{colors.code-muted}" }
+  rule: { backgroundColor: "{colors.border}" }
+  rule-dark: { backgroundColor: "{colors.dark-border}" }
+  control-outline: { backgroundColor: "{colors.control-border}" }
+  control-outline-dark: { backgroundColor: "{colors.dark-control-border}" }
+  open-outline: { backgroundColor: "{colors.open-border}" }
+  open-outline-dark: { backgroundColor: "{colors.dark-open-border}" }
+  success-outline: { backgroundColor: "{colors.success-border}" }
+  success-outline-dark: { backgroundColor: "{colors.dark-success-border}" }
+  warning-outline: { backgroundColor: "{colors.warning-border}" }
+  warning-outline-dark: { backgroundColor: "{colors.dark-warning-border}" }
+  danger-outline: { backgroundColor: "{colors.danger-border}" }
+  danger-outline-dark: { backgroundColor: "{colors.dark-danger-border}" }
+  focus: { backgroundColor: "{colors.focus}" }
   code-outline: { backgroundColor: "{colors.code-border}" }
-  outline: { backgroundColor: "{colors.border}" }
-  outline-dark: { backgroundColor: "{colors.dark-border}" }
+  chart-line: { backgroundColor: "{colors.chart-primary}" }
+  chart-fill: { backgroundColor: "{colors.chart-primary-fill}" }
+  chart-comparison: { backgroundColor: "{colors.chart-secondary}" }
 ---
 
-# Quiet Report design contract
+# Northstar Report design contract
 
 ## Overview
 
-- **Authority:** This file defines the design for every `html-report-builder` output.
-- **Format:** [Google Labs' DESIGN.md alpha specification](https://github.com/google-labs-code/design.md/blob/main/docs/spec.md), checked on 7 October 2026.
-- **Identity:** Our report aesthetic in Google's format, not Google branding or a Material Design redesign.
-- **Audience:** Readers evaluating evidence, not dashboard operators.
-- **Aesthetic:** Flat surfaces, restrained blue, thin outlines, generous spacing, secondary right rail.
-- **Agent decisions:** Content and useful evidence-backed components only, not visual design.
-- **Implementation:** Reuse matching markup, tokens, and behavior from `assets/example-report.html`; omit unused components.
-- **Precedence:** Explicit user design overrides take priority; otherwise all tokens and rules below are mandatory.
-- **Runtime:** Never fetch this document or private source data from the report.
-
-| Token | CSS variable | Theme behavior |
-| --- | --- | --- |
-| `primary` | `--text` | Substitute `dark-primary` under `.dark` |
-| `secondary` | `--muted` | Substitute `dark-secondary` |
-| `tertiary` | `--accent` | Substitute `dark-tertiary` |
-| `neutral` | `--page` | Substitute `dark-neutral` |
-| Other color tokens | Same name prefixed with `--` | Substitute the corresponding `dark-*` token |
-| `code-*` | Same name prefixed with `--` | Unchanged in both themes |
+- **Source of truth:** The original Northstar API report in [assets/example-report.html](assets/example-report.html).
+- **Format:** [Google Labs' DESIGN.md specification](https://github.com/google-labs-code/design.md/blob/main/docs/spec.md), alpha.
+- **Purpose:** Express the existing design, not redesign it or adopt Google's visual identity.
+- **Identity:** Developer-documentation report; white/black page, zinc neutrals, restrained blue, thin horizontal rules, generous whitespace.
+- **Agent decisions:** Content, section names, and useful evidence-backed components only.
+- **Preserve:** Original typography, fixed top-right utilities, flat KPI strip, two-column executive prose, right rail, chart styling, and horizontal diagram.
+- **Implementation:** Reuse the example's Tailwind classes and small behavior-specific CSS. Tokens name existing values; they do not require replacing utilities with a new component framework.
+- **Extensions:** Additional component examples live in a closed Methodology disclosure, not a replacement showcase page.
+- **Precedence:** Explicit user design overrides take priority; otherwise follow this contract.
+- **Runtime:** Embed authorized source data; never fetch this document or private data from the report.
 
 ## Colors
 
-| Role | Token / rule |
-| --- | --- |
-| Page themes | White light theme; near-black dark theme |
-| Table headers, quotations, diagram nodes, equations, loading/empty panels | `surface` |
-| Hovered controls and open disclosure summaries | `hover` |
-| 1px boundaries and chart grids | `border` |
-| Prose links, focus rings, active navigation, primary controls | `accent` |
-| Admonition labels/icons/outlines and badges | Matching semantic token |
-| Admonition message body | Normal `text`, no saturated fill |
-| Normal text and controls | Contrast ≥4.5:1 |
-| Large text | Contrast ≥3:1 |
-| Meaningful non-text controls and focus indicators | Contrast ≥3:1 |
+| Role | Light | Dark |
+| --- | --- | --- |
+| Page | `neutral`, white | `dark-neutral`, black |
+| Headings | `primary`, zinc-950 | `dark-primary`, zinc-100; strong emphasis may use white |
+| Executive prose | `secondary`, zinc-700 | `dark-secondary`, zinc-300 |
+| Lead / descriptions | `description`, zinc-600 | `dark-description`, zinc-400 |
+| Metadata / captions / rail | `muted`, zinc-500 | `dark-muted`, zinc-400 |
+| Section labels / prose links | `tertiary`, blue-700 | `dark-tertiary`, blue-400 |
+| Active navigation | Inherited heading color, not blue | Inherited heading color, not blue |
+| Rules / table dividers | `border`, zinc-200 | `dark-border`, zinc-800 |
+| Inputs / neutral callout outlines | `control-border`, zinc-300 | `dark-control-border`, zinc-700 |
+| Open disclosure outline | `open-border`, zinc-400 | `dark-open-border`, zinc-600 |
+| Hover | `hover`, zinc-50 | `dark-hover`, zinc-900; disclosure hover at 60% opacity |
+| Callout body | `callout-text`, zinc-800 | `dark-callout-text`, zinc-200 |
+| Status: success / warning / danger | Emerald-700 / amber-700 / red-700 | Emerald-400 / amber-400 / red-400 |
+| Focus | Blue-500 | Blue-500 |
+| Code | Fixed #0d0d0d surface; zinc-100 text; zinc-400 toolbar; zinc-800 outline | Same |
 
-- Chart colors follow **accent, success, tip, warning, danger, muted**, using theme-correct values.
-- Distinguish chart series with labels, dash patterns, and point shapes, not color alone.
-- Split more than six series into small multiples; do not invent colors.
-- Outside charts, color conveys semantic state, not arbitrary category branding.
-- `outline` entries are boundary swatches, not text styles; divider colors need not meet text contrast.
-- No transparent reading surfaces, gradients, glass, or decorative colors.
+- Charts retain blue-600 as the primary series and zinc-400 as the comparison series in both themes.
+- Blue chart fill is `#2563eb18`, not a gradient.
+- Note, Information, Tip, and Recommendation share the original neutral callout palette.
+- Status colors require explicit labels; do not rely on color alone.
+- Normal text meets 4.5:1 contrast; large text and meaningful focus indicators meet 3:1.
+- Boundary tokens describe outlines, not text colors.
+- No decorative palettes, purple tips, tinted equation fills, or saturated callout fills.
 
 ## Typography
 
-| Content | Token / treatment |
+| Role | ≥640px | <640px | Original treatment |
+| --- | --- | --- | --- |
+| H1 | 48px / 48px | 36px / 40px | Weight 600; tracking -.035em; max-width 768px |
+| H2 | 30px / 36px | 24px / 32px | Weight 600; tracking -.025em |
+| Lead | 18px / 32px | Same | Zinc-600/400; max-width 672px |
+| Executive prose | 15px / 28px | Same | Zinc-700/300 |
+| Component prose | 14px / 24px | Same | Descriptions zinc-600/400 |
+| Rail / table | 14px / 20px | Same | Compact document UI |
+| Captions | 12px / 20px | Same | Zinc-500/400 |
+| Section eyebrow | 12px / 16px | Same | Uppercase; weight 600; tracking .14em |
+| Header metadata | 12px / 16px | Same | Weight 500; uppercase; tracking .16em |
+| KPI values | 24px / 32px | Same | Weight 600; tabular numerals |
+| Utility buttons | 12px / 16px | Same | Weight 500 |
+| Code block | 16px / 24px | Same | Original monospace stack |
+
+- Sans stack: `Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif`.
+- Preserve the Inter-first fallback stack; do not add a font download or replace it with a new family.
+- Mono stack: `SFMono-Regular, Cascadia Code, Roboto Mono, ui-monospace, monospace`.
+- Inline endpoint identifiers use 12px monospace; code blocks use the original larger type.
+- One H1; H2 for report sections; bold compact subheadings inside secondary component examples.
+- KaTeX uses its supplied math fonts.
+
+| Supporting text | Pattern |
 | --- | --- |
-| Report title | One `h1`; `h1-mobile` below 640px |
-| Report sections | `h2`; `h2-mobile` below 640px |
-| Subsections | `h3` |
-| Executive takeaway | `lead` |
-| Prose | `body`, maximum 72ch |
-| Component descriptions and tables | `small` |
-| Captions and helper text | `caption` |
-| Uppercase metadata and eyebrows | `label` |
-| KPI values | `metric`, tabular numerals |
-| UI controls | `control` |
-| Code and technical identifiers | `code` |
-| Strong text | Weight 600 |
-| Long links and identifiers | `overflow-wrap: anywhere` |
-| Code blocks | Preserve lines; local horizontal scrolling |
+| Lists | Native bullets/numbers; 24px inset; 8px item gaps |
+| Definitions | Semibold term; description 4px below |
+| Inline code | Plain monospace; do not introduce filled chips |
+| `kbd` | Compact 1px neutral outline; 4px radius |
+| Quotations | 2px neutral left rule; 16px inset; attribution below; no filled card |
+| Prose links | Blue-700/400; underline |
+| Navigation links | Unadorned; inherited neutral active state |
+| Citations | Numbered anchors; supplied source details; ordered references and return links |
 
-- Use the exact `h1` system sans stack for all non-code text.
-- Use the `code` monospace stack for block/inline code and technical identifiers.
-- Use KaTeX's supplied math fonts; do not load Inter or decorative fonts.
-- Use only weights 400/500/600; preserve the browser's 16px base size.
-- Do not uppercase body copy; use tabular numerals for table values.
-
-| Text element | Fixed styling / behavior |
-| --- | --- |
-| Bulleted / numbered lists | Native markers; 24px left padding; 8px between items |
-| Nested lists | 12px top margin |
-| Definition lists | Bold terms; description below with 4px spacing |
-| Inline code and `kbd` | `surface`; 1px border; 4px radius; 2px vertical / 4px horizontal padding |
-| Blockquotes | `surface`; 2px muted left rule; 16px padding; `small` text; attribution below |
-| Prose links | Always underlined |
-| Metadata / navigation links | Unadorned until hover or focus |
-| Citations | Numbered anchors; ordered references; supplied publisher/title/date; return link |
-
-- Never invent quotations, attributions, or citations.
-- UI icons use **Google Material Symbols Outlined** only: 20px, weight 400, optical size 20, fill 0.
-- Load only used icons, alphabetized in Google Fonts' `icon_names`.
-- Give icon controls visible labels or accessible names; hide decorative icons from assistive technology.
-- On icon-font failure, hide ligatures; retain labels and native disclosure markers.
+- Never invent quotations, attribution, or citations.
+- UI icons use Google Material Symbols Outlined, weight 400, optical size 20, fill 0.
+- Standard icons are 20px; the original toolbar contrast icon is 16px.
+- Load only named icons; give icon controls accessible names; hide decorative icons from assistive technology.
+- Do not draw custom SVG/Unicode UI icons; content SVGs remain allowed.
 
 ## Layout
 
-| Layout property | ≥1024px | <1024px |
+| Property | ≥1024px | <1024px |
 | --- | --- | --- |
-| Frame | Centered; max-width 1180px including padding | Single fluid column |
+| Frame | Centered, max-width 1180px including padding | Same maximum, single column |
 | Horizontal padding | 40px | 24px |
-| Grid columns | `minmax(0, 820px) 200px` | `minmax(0, 1fr)` |
-| Column gap | 56px | No rail gap |
-| Contents | Right rail, sticky 32px from top | Fully outlined native disclosure after header |
-| Rail height | Max `calc(100dvh - 64px)`; local scrolling | Hidden |
+| Columns | `minmax(0,820px) 200px` | One fluid reading column |
+| Gap | 56px | No rail |
+| Frame top padding | 96px | 80px |
+| Frame bottom padding | 96px | 96px |
+| Contents | Right rail, sticky 96px from top | Outlined native disclosure below header |
+| Executive prose | Two columns from 640px; 32px gap | One column below 640px |
+| KPIs | Four columns from 640px | Two columns below 640px, including narrow phones |
 
-| Spacing property | ≥640px | <640px |
-| --- | --- | --- |
-| Frame top / bottom padding | 64px / 80px | 40px / 56px |
-| Section bottom spacing | 80px | 56px |
-| KPI columns | 4 | 2 at 400–639px; 1 below 400px |
-
-| Document element | Fixed rule |
+| Element | Original geometry |
 | --- | --- |
-| DOM order | Reading column before right rail |
-| Reading width | Maximum 820px; shrinks with available frame width |
-| Both contents lists | Identical links; `aria-label="On this page"` |
-| Header actions | Normal flow; above metadata; right-aligned; wrapping |
-| Theme / Print controls | Secondary buttons |
-| Header order | Actions → category/date/context → H1 → lead conclusion → optional KPIs → 1px bottom rule |
-| Header bottom padding / following space | 32px / 32px |
-| KPI container | Single 1px outline; 8px radius; shared dividers; 16px cell padding; no shadow |
-| Section start, except first | 1px rule; 32px top padding |
-| H2 → introduction | 12px |
-| Heading block → component | 24px |
-| Paragraph / component-group gap | 16px |
+| Utilities | Fixed top-right, 16px from edges; 8px gap; z-index 50 |
+| Header | 1px bottom rule; 48px bottom padding; 64px following space |
+| Header order | Metadata/status → H1 → lead → KPI strip |
+| Metadata → H1 | 24px |
+| H1 → lead | 20px |
+| Lead → KPI strip | 40px |
+| KPI strip | Top/bottom rules and shared internal dividers; no rounded enclosing card |
+| KPI cells | 20px vertical padding; 16px internal horizontal separation |
+| KPI label → value → delta | 8px / 4px |
+| Section gap | 80px at all screen widths; final Methodology gap 64px |
+| Section start, except first | 1px horizontal rule; 32px top padding |
+| Eyebrow → H2 | 12px |
+| H2 → description | 12px |
+| Summary → prose | 24px |
+| Figure gap | 32px |
+| Math / code gap | 28px |
 | Section scroll margin | 32px |
-| Figures / tables / code | Full reading-column width |
-| Plain prose | Maximum 72ch |
+| Mobile contents bottom margin | 48px |
 
-- Identify illustrative/example content in the first viewport when applicable.
-- Omit unavailable metrics or show `N/A` with explanation; never invent deltas.
-- No site shell, top navigation, left sidebar, or fixed floating toolbar.
-- Do not wrap every paragraph in cards or force two-column executive prose.
+- Keep the reading column first in the DOM and the rail second.
+- Keep the original fixed utility controls; they are not a site navigation bar.
+- No global top navigation or left sidebar.
+- Do not move Theme/Print into the header, flatten executive prose to one desktop column, or turn KPIs/figures/tables into boxed cards.
+- Omit unavailable metrics or show `N/A`; never invent deltas.
+- Preserve section IDs and update both contents lists when replacing content.
 
 ## Elevation & Depth
 
-| Element | Depth treatment |
+| Element | Treatment |
 | --- | --- |
-| Ordinary controls, metrics, cards, charts, disclosures | No shadow; separate with 1px boundaries, whitespace, and `surface` |
-| Tooltips | Code surface; no shadow |
-| Native dialogs | Shadow `0 16px 48px rgb(0 0 0 / .2)`; backdrop `rgb(0 0 0 / .48)` |
+| Report sections / metrics / figures / tables | Flat, thin rules, no shadow |
+| Original fixed utility buttons | `shadow-sm`; page-colored 90% fill; backdrop blur |
+| Callouts / disclosures | Full outline; no shadow |
+| Optional tooltip | Code-colored surface; no decorative shadow |
+| Native dialog | Page surface; neutral outline; backdrop `rgb(0 0 0 / .48)` |
 
-- Do not stack decorative layers.
+- Preserve the toolbar's subtle translucency/blur; do not extend it to reading surfaces.
+- No gradients, floating evidence cards, decorative layers, or marketing chrome.
 
 ## Shapes
 
 | Element | Radius |
 | --- | --- |
-| Controls | 6px |
-| Components, figures, disclosures | 8px |
-| Admonitions | 12px |
-| Compact status badges | Pill |
-| Straight rules and table dividers | 0px |
-
-- Use existing Material Symbols for UI icons, not handwritten SVGs or Unicode substitutes.
-- SVG/canvas is allowed for chart, diagram, and evidence content, not bespoke UI icons.
-- No oversized container rounding.
+| Fixed utility buttons / status badges | Pill |
+| Filter inputs / optional local buttons | 6px |
+| Code / equation / disclosure containers | 8px |
+| Callouts | 12px |
+| Copy button | 4px |
+| KPI strip / chart and table rules | None |
 
 ## Components
 
-### Navigation and theme
+### Navigation and themes
 
-| Navigation property | Rule |
+| Property | Rule |
 | --- | --- |
-| Contents links | 1px left boundary; 16px horizontal padding; ≥44px target |
-| Active link | Accent text/border; weight 600; `aria-current="location"` |
-| Initial state | Explicit active link |
-| Fragment click | Immediately update active state; preserve native fragment navigation |
-| Scroll tracking | `IntersectionObserver` updates both lists |
-| Active section on scroll | Last section crossing 35% of viewport height; final section at page bottom |
-| Skip link | Keyboard-visible; targets `<main id="report">` |
+| Rail | 200px; sticky 96px from top; no new surface/box |
+| Rail label | 12px uppercase; tracking .14em; 16px bottom gap |
+| Rail links | 1px left rule; 16px horizontal / 8px vertical padding; 14px type |
+| Active link | Inherited text/rule color; weight 600; `aria-current="location"` |
+| Scroll tracking | `IntersectionObserver`; native fragment navigation; final section active at page bottom |
+| Mobile contents | Native outlined disclosure; same report links |
+| Theme setup | Head script before paint; `.dark`; `color-scheme`; stored `report-theme`, otherwise system preference |
+| Preview override | `?theme=light` / `?theme=dark`; do not persist until user toggles |
+| Toggle | Original compact Theme button; accessible name; `aria-pressed` reflects dark mode |
+| Storage failure | Catch errors; toggle still works in memory |
+| Rich content | Recolor Chart.js; rerender Mermaid from preserved source; serialize renders |
 
-- No scroll-jacking.
-- Initialize `.dark` and `color-scheme` in a head script before paint.
-- Read stored `report-theme`; otherwise use system preference.
-- Catch storage failures; keep explicit choices working in memory.
-- Treat `?theme=light` / `?theme=dark` as preview overrides; persist only after a user toggle.
-- Theme toggle has a label and `aria-pressed` reflecting dark mode.
-- Follow system changes only until the user makes an explicit choice.
-- On theme change, recolor charts and rerender Mermaid from preserved source.
-- Serialize diagram rendering so stale renders cannot overwrite the latest theme.
+### Buttons, forms, tooltips, and feedback
 
-### Buttons, links, tooltips, and feedback
-
-| Button property / variant | Rule |
+| Control | Pattern |
 | --- | --- |
-| Common geometry | 44px tall; 12px horizontal padding; 8px icon gap |
-| Secondary | Page fill; 1px border; text-colored label |
-| Primary | Accent fill / on-accent text; only for a content-required main action |
-| Tertiary | Text-only; same hit target |
-| Code copy | Fixed code palette |
-| Hover | Defined hover tokens |
-| Focus | 2px accent outline; 2px offset |
-| Pressed | Scale `.98` |
-| Disabled | Native `disabled`; opacity `.55`; no press/hover motion |
+| Theme / Print | 36px tall; pill; 12px horizontal padding; 12px text; 1px neutral outline |
+| Theme label | Hidden below 640px; accessible name stays available |
+| Copy | Original compact 4px radius; 8px horizontal / 4px vertical padding |
+| Filter | Transparent fill; 1px zinc-300/700 outline; 6px radius; 12px horizontal / 8px vertical padding; 14px text; max-width 384px |
+| Local primary action | Blue-600 fill; white label; compact 6px-radius geometry; only when content requires it |
+| Local secondary action | Neutral outline; transparent fill; same compact geometry |
+| Focus | Blue-500 ring, 2px; inset for summary rows |
+| Press | Scale .97; no bounce |
+| Disabled | Native `disabled`; opacity .5; no hover/press motion |
+| Textarea / select | Same filter border/type/radius; textarea vertically resizable |
+| Labels / helpers | Visible; 8px label gap; 12px helpers; `aria-describedby` where applicable |
+| Validation | Red outline; explicit message; `aria-invalid="true"` |
+| Checkbox / radio | Native controls; wrapped 44px label targets; labeled radio fieldset |
+| Tooltip | Code palette; 12px/20px; max-width 240px; 8px padding; 6px radius |
 
-- Keep meaningful labels; do not replace them with icon-only controls or fabricated CTAs.
-- Copy/sort/filter/demo feedback uses a persistent nearby `role="status"` or `aria-live="polite"` line.
-- A transient toast must not be the only result.
-- Copy success: **Copied**.
-- Copy failure: **Copy unavailable. Select the code to copy.**
-
-| Tooltip property | Rule |
-| --- | --- |
-| Text / palette | `small`; code palette |
-| Size | Max-width 240px; 8px padding; 6px radius |
-| Open | Hover and keyboard focus |
-| Association | `aria-describedby` |
-| Close | Escape |
-| Content | Optional explanation only; never the sole location of essential information |
-
-### Forms and filters
-
-| Form element | Rule |
-| --- | --- |
-| Visible label | 8px before control |
-| Text / search / select | 44px tall; 12px padding; page fill; 1px border; `control` typography |
-| Textarea | ≥112px tall; vertically resizable |
-| Helper text | `caption`; 8px top spacing; `aria-describedby` |
-| Validation error | Danger outline; explicit message; `aria-invalid="true"` |
-| Placeholder | Example only, never a label replacement |
-| Checkbox / radio | Native control; accent color; wrapped ≥44px label target |
-| Radio group | Labeled fieldset |
-
-- Include controls only for report-local interactions required by the content.
-- Prefer native controls, sections, and disclosures over custom switches, tabs, menus, or submission flows.
+- Tooltips open on hover and focus, use `aria-describedby`, and close with Escape.
+- Keep essential information out of tooltips and dialogs.
+- Use persistent `role="status"` / polite announcements for copy, sort, filter, and local preview feedback.
+- Copy success: **Copied**; failure: **Copy unavailable. Select the code to copy.**
+- Placeholders are examples, not labels.
+- Forms are optional report-local interactions; no fabricated submission flows.
+- Preserve original compact visible controls; do not impose a new 44px button design globally.
 
 ### Tables and badges
 
-| Table property | Rule |
+| Property | Original pattern |
 | --- | --- |
-| Semantics | Caption; scoped headers |
-| Typography | 14px; tabular numeric values |
-| Header / cells | Surface-filled header; 12px cell padding; 1px row dividers |
-| Alignment | Labels left; numbers right |
-| Scroll container | 1px outline; 8px radius; accessible name; keyboard focus; local horizontal scrolling |
-| Sticky header | Only for >20 rows inside a bounded scroll region |
-| Sort control | Labeled button; `swap_vert` icon; `aria-sort` on active `<th>` |
-| Sort feedback | Announce column and direction in status line |
-| Filter feedback | Visible row count; textual no-results panel; Reset filter control |
-| Missing values | `N/A`, never zero |
+| Table container | Horizontal overflow; top/bottom neutral rules; no side box or radius |
+| Table | 14px; scoped headers; semantic caption; tabular values |
+| Header | 12px muted text; transparent fill; 12px padding; weight 500 |
+| Body cells | 12px horizontal / 16px vertical padding |
+| Rows | 1px zinc-200/800 dividers |
+| Alignment | Labels left; numeric values right |
+| Endpoint IDs | 12px monospace |
+| Sort | Native header buttons; `aria-sort` on active header; polite column/direction feedback |
+| Filter | Visible count; explicit no-results text; Reset filter when empty |
+| Missing data | `N/A`, not zero |
+| Badge | Compact 12px pill; 8px horizontal / 4px vertical padding; explicit status text |
 
-- Do not cause horizontal page scrolling on mobile.
-- Do not claim fictional example tables reconcile with unrelated KPIs.
-- Badges use `small` text, pill radius, 1px semantic outline, and 4px vertical / 8px horizontal padding.
-- Use explicit labels such as **Within target** or **Needs attention**; color is supplemental.
-- Status badges are not interactive.
+- Use a keyboard-focusable, named local scroll region; prevent horizontal page overflow.
+- Only long tables need sticky headers inside bounded scroll regions.
+- Preserve plain colored assessment text in endpoint rows; do not turn every assessment into a badge.
+- Preserve the original outlined Healthy badge and subtle filled Lower is better badge.
+- Do not claim fictional example values reconcile with unrelated metrics.
 
 ### Charts
 
-| Evidence question | Chart type |
+| Property | Original Chart.js pattern |
 | --- | --- |
-| Trend over time | Line |
-| Category comparison | Horizontal bar |
-| Discrete periods | Vertical bar |
-| Relationship between variables | Scatter |
-| No suitable visual pattern | Table instead |
+| Figure | Top/bottom rules; no enclosing rounded card |
+| Plot region | 340px at all widths; 20px vertical padding |
+| Primary series | Blue-600; 2px stroke; 3px points; tension .32; subtle `#2563eb18` fill |
+| Comparison series | Zinc-400; 1.5px stroke; 2px points; tension .32; transparent fill |
+| Grid | Zinc-200 light / zinc-800 dark; no axis frame |
+| Tick / legend text | Zinc-600 light / zinc-400 dark |
+| Legend | Bottom; point-style keys; 8px box width; 24px padding |
+| Tooltip | Original Chart.js dark tooltip; explicit values and units |
+| Y axis | `suggestedMin: 0`; units in ticks |
+| Interaction | `intersect: false`; `mode: 'index'` |
+| Caption | 12px/20px; 12px top gap |
+| Reduced motion | Disable chart animation |
+| Theme changes | Recolor text/grid without changing series styling |
 
-| Chart.js property | Fixed value / behavior |
-| --- | --- |
-| Figure | 1px outline; 8px radius; 16px padding; labeled heading |
-| Plot height | 300px mobile / 340px desktop |
-| Caption / takeaway | Outside plot |
-| Axis / legend / tooltip type | System font, 12px |
-| Grid | 1px `border`; no axis frame |
-| Ticks / legend labels | Theme-correct `muted` / `text` |
-| Tooltips | `code-background` / `code-text`; values and units |
-| Lines | 2px stroke; 3px points; tension 0; no fill |
-| Bars | 4px radius; no border; zero baseline |
-| Axes | Explicit units |
-| Line baseline | Zero unless a nonzero baseline is explained in caption |
-| Legend | Bottom for multiple series; omit for one named series |
-| Animation | 180ms; 0 under reduced motion |
-| Theme update | `update('none')` |
-
-| Series | Color | Dash pattern | Point shape |
-| --- | --- | --- | --- |
-| 1 | `accent` | `[]` | `circle` |
-| 2 | `success` | `[6,4]` | `rect` |
-| 3 | `tip` | `[2,3]` | `triangle` |
-| 4 | `warning` | `[8,3,2,3]` | `rectRot` |
-| 5 | `danger` | `[10,3]` | `cross` |
-| 6 | `muted` | `[1,4]` | `star` |
-
-- Every chart needs an accessible name, written conclusion, and reachable exact-value table.
-- Exact-value tables may be in a native disclosure.
-- On library failure, hide the blank canvas and show a fallback pointing to the table.
-- Print exact-value tables, not dark or unrendered canvases.
-- No pie/donut, 3D, gradient, dual-axis, or decorative charts.
-- The example shows line and horizontal bar; other types inherit the same settings.
+- Time → line; category comparison → horizontal bars; discrete periods → vertical bars; relationships → scatter; otherwise table.
+- Other chart types inherit the original flat figure, palette, and compact legend, not the discarded showcase style.
+- Bars start at zero; any materially truncated line axis requires an explicit caption.
+- Keep a written takeaway, accessible chart name, and reachable exact-value table.
+- No 3D, dual-axis, gradient, or decorative chart treatments.
+- On library failure, show a concise fallback pointing to exact values.
+- Do not replace curved blue/gray lines with a multicolor dashed, unfilled style.
 
 ### Diagrams and images
 
-| Mermaid property | Fixed value / mapping |
+| Property | Original Mermaid pattern |
 | --- | --- |
-| Theme / security | `theme: 'base'`; strict security |
-| Font | System font, 14px |
-| Primary / secondary / tertiary backgrounds | `surface` |
-| Node text / borders | `text` / `border` |
-| `lineColor` | `muted` |
-| `edgeLabelBackground` | `page` |
-| Nodes / edges | Uniform neutral nodes; labeled edges |
-| Flow direction | Top-to-bottom at all widths |
-| Figure | Same outline/radius as charts; 24px padding; local horizontal overflow |
-| SVG sizing | `max-width: 100%; height: auto` |
-| Source | Preserve in a `<template>` |
+| Theme | `neutral` in light mode; `dark` in dark mode |
+| Security | Strict |
+| Font | `Inter, system-ui, sans-serif` |
+| Direction | Original left-to-right flow; preserve its relationship layout |
+| Figure | Top/bottom rules; 32px vertical padding; no rounded outer card |
+| SVG | `max-width: 100%; height: auto`; centered |
+| Source | Preserved in a `<template>` |
+| Theme update | Rerender from source; prevent stale results |
+| Failure | Readable prose equivalent, not a blank diagram |
 
-- No arbitrary per-node palettes.
-- Keep a prose equivalent outside the generated diagram, visible without JS/CDNs.
-- Show a short rendering-failure fallback; print the prose equivalent instead of theme-dependent SVG.
-- Images use semantic figures, descriptive alt text, 8px radius, max-width 100%, and intrinsic aspect ratio.
-- Include captions and supplied attribution; never add decorative stock images or crop evidence.
-- The example's illustrative inline SVG is a content figure, not a bespoke UI icon or external dependency.
+- Do not switch the reference diagram to a vertical flow or replace Mermaid's original themes with a new base palette.
+- Complex/large diagrams may scroll locally; never make the whole page overflow.
+- Authorized images use semantic figures, descriptive alt text, natural aspect ratio, max-width 100%, and supplied captions/attribution.
+- Optional images may use 8px rounding; no decorative stock art or evidence cropping.
+- Content SVGs are allowed; custom SVG UI icons are not.
 
 ### Admonitions
 
-| Admonition property | Rule |
+| Shared property | Original pattern |
 | --- | --- |
-| Container | Full 1px semantic outline; 12px radius; page fill |
-| Spacing | 16px padding; 12px icon/text gap |
+| Container | Complete 1px outline; 12px radius; page-matched fill |
+| Spacing | 20px horizontal / 16px vertical padding; 16px icon gap |
 | Icon | Leading 20px Material Symbol |
-| Text | `small`; bold explicit label; normal body color |
-| Semantic emphasis | Label/icon/outline, not the whole message |
-| Accessibility | Static `role="note"`, not an assertive live region |
+| Message | 14px/24px; zinc-800/200 body; explicit semibold label |
+| Accessibility | Static `role="note"`, not assertive live alerts |
 
-| Type | Token | Icon | When to use |
-| --- | --- | --- | --- |
-| Note | secondary | info | Context or limitation without severity |
-| Information | info | info | A factual clarification needed to read evidence |
-| Tip | tip | lightbulb | Optional technique or shortcut |
-| Success | success | check_circle | An evidenced successful outcome |
-| Warning | warning | warning | Risk or caveat requiring attention |
-| Danger | danger | error | A blocking condition or harmful action |
+| Type | Palette | Icon |
+| --- | --- | --- |
+| Note | Original neutral | `info` |
+| Information / Important / Recommendation | Original neutral | `info` |
+| Tip | Original neutral, no new purple palette | `lightbulb` |
+| Success | Emerald label/icon/outline | `check_circle` |
+| Warning / Caution | Amber label/icon/outline | `warning` |
+| Danger / Error | Red label/icon/outline | `error` |
 
-- **Important / Recommendation:** Information style with the explicit label.
-- **Caution:** Warning style.
-- Do not create extra palettes or mark unverified recommendations as success.
+- Semantic outlines use the light 300 / dark 900 status shades; body text remains neutral.
+- Neutral labels use heading color, as in the original Recommendation.
+- Use success only for verified outcomes; keep caution and recommendation wording explicit.
 
 ### Mathematics
 
-| Math property | Rule |
+| Property | Pattern |
 | --- | --- |
-| KaTeX configuration | `output: 'htmlAndMathml'`; `trust: false`; `throwOnError: false` |
-| Inline delimiters | `\(...\)` |
-| Display delimiters | `\[...\]` |
-| Inline appearance | Inherit text color and size |
-| Display panel | `surface` fill; 1px border; 8px radius; 24px padding; local horizontal overflow |
-| Display type / alignment | 1.05em; centered |
-| Definitions / interpretation | Left-aligned prose below |
-| Multi-line expressions | `aligned` |
-| Equation numbering | Only when cross-referenced |
-| Rendering failure | Retain raw TeX and a prose equivalent |
+| Library | KaTeX; `output: 'htmlAndMathml'`; `trust: false`; `throwOnError: false` |
+| Inline / display delimiters | `\(...\)` / `\[...\]`; avoid currency collisions |
+| Equation panel | Transparent/page fill; 1px zinc-200/800 outline; 8px radius |
+| Panel padding | 20px horizontal / 24px vertical |
+| Alignment | Center equation; definitions/interpretation left-aligned below |
+| Display overflow | Local horizontal scrolling; 8px vertical breathing room |
+| Multi-line | `aligned` |
+| Failure | Raw TeX plus a plain-language equivalent |
 
-- Do not use dollar delimiters that misinterpret currency.
-- Include formulas only when they explain the evidence, not as decoration.
+- Preserve the original math typography; no new forced 1.05em treatment or tinted panel.
+- Number equations only when referenced; do not include ornamental formulas.
 
 ### Code
 
-| Code property | Rule |
+| Property | Original pattern |
 | --- | --- |
-| Panel | Fixed `code-background` / `code-text` in both themes; 1px `code-border`; 8px radius |
-| Toolbar | Language/filename; 44px Copy button |
-| Code type / spacing | 13px monospace; 16px padding; preserved indentation |
-| Overflow | Local scrolling; no line wrapping |
-| Highlighting | Highlight.js; versioned GitHub Dark stylesheet |
+| Panel | #0d0d0d in both themes; zinc-800 outline; 8px radius |
+| Toolbar | Zinc-400, 12px; 16px horizontal / 8px vertical padding |
+| Copy | Compact original control, not a tall replacement button |
+| Code | Original mono stack; 16px/24px; 20px padding |
+| Highlighting | Versioned Highlight.js GitHub Dark stylesheet |
+| Overflow | Preserve indentation and lines; horizontal scrolling |
 | Copy source | `textContent`, excluding toolbar |
-| Clipboard failure | Announce selectable-code fallback |
-| Print | Black-on-white; wrap lines; retain language label |
+| Failure | Selectable raw code; polite copy-failure message |
 
-- Escape embedded HTML; never use `innerHTML` for user-provided source.
-- Add line numbers or screen line wrapping only when explicitly requested.
+- Escape embedded HTML; do not set user source with `innerHTML`.
+- Do not shrink code to 13px or add line numbers without a user request.
 
 ### Expandable sections
 
-| Disclosure property | Rule |
+| Property | Original pattern |
 | --- | --- |
 | Semantics | Native `<details>/<summary>` |
-| Container | Complete 1px border per item; 8px radius |
-| Item gap | 12px |
-| Summary | ≥44px height; 16px padding; weight 500 |
-| Closed fill | `page` |
-| Open summary / border | `hover` / `muted` |
-| Icon | Trailing `add`; rotate 45° when open |
-| Icon failure | Retain native marker |
-| Focus ring | Inset to avoid clipping |
-| Content padding | 16px sides and bottom |
-| Animation | Example's 180ms height/opacity enhancement; both directions; cancellation-safe |
-| Reduced motion / unsupported Web Animations | Instant native toggling |
-| Mobile contents | Same disclosure pattern |
-| Print | Expand all; restore previous states afterward; preserve table filters |
+| Container | Full zinc-300/700 outline; 8px radius; transparent fill |
+| Open outline | Zinc-400/600 |
+| Gap | 12px |
+| Summary | 14px medium; 20px horizontal / 16px vertical padding; ≥44px target |
+| Mobile contents summary | 16px horizontal / 12px vertical padding |
+| Hover | Zinc-50 / zinc-900 at 60% opacity; no permanent filled open-summary redesign |
+| Icon | Trailing 20px `add`, zinc-400; 45° rotation when open |
+| Focus | Inset 2px blue-500 ring |
+| Body | 20px horizontal / 16px bottom padding; muted 14px/24px text |
+| Animation | 190ms `cubic-bezier(.2,.8,.2,1)`; height/opacity; at most 4px offset |
+| Reduced motion / unsupported animation | Native instant toggle |
 
-- Keep essential findings outside closed disclosures.
-- Do not delay native keyboard activation or require JS to read details.
+- Preserve keyboard activation, both animation directions, and cancellation handling.
+- Keep essential conclusions visible outside closed details.
+- Additional examples belong in the closed component-reference disclosure so the original report remains the default presentation.
 
-### Supporting panels, progress, and dialogs
+### Supporting content and optional controls
 
-| Supporting element | Rule |
+| Component | Extension of existing patterns |
 | --- | --- |
-| Evidence card | 1px border; 8px radius; 24px padding; no shadow; H3 plus body |
-| Action list | Native numbered list; owner/deadline only when supplied |
-| Timeline | Ordered list; 1px left rule; 16px inset; bold date; body text |
-| Quantitative progress | Native `<progress>`; visible label and numeric text; 8px border-colored track; accent fill |
-| Loading progress | Omit value; label **Loading**; only for an actual loading state |
-| Empty / loading panel | `surface`; 1px border; 8px radius; 24px padding; explicit text |
+| Evidence card | Neutral 1px outline; 8px radius; 24px padding; transparent fill; no shadow |
+| Action list | Native numbered list; owner/deadline only if supplied |
+| Timeline | Neutral 1px left rule; 16px inset; bold supplied date |
+| Progress | Native `<progress>`; visible label and numeric value; 8px track; blue-600 accent |
+| Loading | Native indeterminate progress only for actual loading; explicit label |
+| Empty state | Neutral outlined 8px panel; 24px padding; plain limitation text |
 | Error state | Danger admonition |
+| Dialog | Native `<dialog>`; page fill; neutral outline; 8px radius; 24px padding; max-width 512px; 24px viewport margins |
 
-- Cards group distinct related evidence, not every section.
-- Do not invent timeline milestones or use loading as animated decoration.
-- Distinguish zero results from missing source data.
-- Mark showcase states as demonstrations, not live measurements.
+- Dialog uses `aria-labelledby`, `showModal()`, labeled Close, Escape, and focus restoration.
+- No fabricated milestones, loading decoration, or essential evidence hidden in modal UI.
+- Mark demonstration states as examples; distinguish zero results from missing evidence.
+- Omit all components the report content does not need.
 
-| Native dialog property | Rule |
+### Accessibility, motion, fallbacks, and print
+
+| Concern | Rule |
 | --- | --- |
-| Purpose | Optional, content-required secondary detail only |
-| Size | Max-width 480px; 24px viewport margin |
-| Container | Page fill; 1px border; 8px radius; 24px padding |
-| Title / close control | `aria-labelledby`; labeled Close button |
-| Open | `showModal()`; focus an appropriate control |
-| Close | Escape or Close; restore opener focus |
-
-- Never hide executive evidence or essential chart values in a dialog/tooltip.
-- Omit charts, images, forms, progress, and dialogs that the content does not need.
-
-### Motion, accessibility, fallbacks, and print
-
-| Interaction / accessibility property | Rule |
-| --- | --- |
-| Control motion | 150ms ease-out |
-| Theme / disclosure motion | 180ms |
-| Theme transition scope | Temporary color/background/border only |
+| Control transitions | 150ms color/border/shadow; 120ms press; scale .97 |
+| Theme transition | Temporary 180ms color/background/border/shadow; remove transition class afterward |
+| Disclosure motion | Original 190ms enhancement |
 | Reduced motion | Disable nonessential animation and smooth scrolling, including Chart.js |
-| Keyboard | All controls operable; visible focus |
-| Mobile targets | ≥44px |
-| Semantics | Headings/landmarks; figure captions; table scopes; status announcements; explicit units |
-
-- No motion beyond the specified small affordances.
-- Preserve the example's embedded CSS so the layout remains readable without Tailwind.
-- Libraries enhance existing prose/tables/TeX/code, never replace the only readable evidence.
-- Pin dependencies where practical; Tailwind's v3 CDN is the intentional unversioned exception.
-- Initialize libraries independently so one failure does not disable other interactions.
-- Do not fetch source data at runtime.
+| Keyboard | Visible focus; semantic native controls; named local scroll regions |
+| Libraries | Initialize independently; failures must retain readable evidence |
+| CDN versions | Pin where practical; existing Tailwind v3 CDN is the exception |
+| No-CDN reading | Keep semantic prose, exact values, raw code/TeX, and native disclosures usable |
 
 | Print concern | Rule |
 | --- | --- |
-| Hide | Actions, navigation, forms, dialogs, copy controls, interaction status, sort/disclosure icons |
-| Colors | White surfaces; black text, including syntax spans |
-| Depth | Remove shadows |
-| Overflow | Unwrap local scroll regions; wrap long code/links/TeX |
-| Chart / diagram output | Exact-value tables / prose equivalents |
-| Disclosures / filtered tables | Expand all disclosures; show every row |
-| Page breaks | Keep headings/captions with following content; avoid breaks inside short figures/rows/code panels |
-| Long sections / tables | Allow page breaks |
-| Paper | 16mm margins; no forced paper size |
-| KaTeX failure | Retain readable raw TeX |
-| After print | Restore theme, filters, and disclosure state |
-
-- Verify actual print output; a screen-only screenshot is not print verification.
+| Hide | Utilities, navigation, filters, forms, copy/dialog controls |
+| Colors | White background, black text and syntax spans; remove shadows |
+| Width / overflow | Full document width; unwrap scroll regions; wrap long code |
+| Disclosure / filter state | Expand details; show all rows; restore prior states afterward |
+| Rich evidence | Exact tables and readable diagram equivalents remain available |
+| Page breaks | Keep headings with content; avoid splitting short figures/code/rows; allow long sections/tables to break |
+| Validation | Inspect actual print output, not a screen-only screenshot |
 
 ## Do's and Don'ts
 
 | Do | Don't |
 | --- | --- |
-| Read this contract and the example before building | Restyle by topic or randomly choose a design |
-| Preserve theme/layout/component implementation | Invent fonts, palettes, spacing, chart skins, navigation, or icons |
-| Replace content, IDs, component count, and data | Copy fictional showcase facts, unsupported claims, or example-only demos |
-| Select components by their evidence purpose | Add components merely to demonstrate them |
-| Reuse existing panel/type/semantic tokens for uncommon content | Invent an essential new interactive pattern; ask the user instead |
-| Omit unnecessary controls | Redesign them to fill space |
-| Test only components included in the output | Claim untested behavior works |
-| Preserve our report identity | Copy Google/OpenAI branding or imply affiliation |
-
-- Validate light/dark at desktop/mobile, theme persistence, keyboard/focus, links/scroll-spy, and print.
-- Where included, also validate sorting/filtering/reset, copying, disclosures, library failures, and reduced motion.
+| Read this contract and the original example | Treat Google's file format as permission to redesign |
+| Preserve original utilities, title scale, KPI strip, prose grid, and rail | Move controls into the header or box every component |
+| Preserve original blue/gray curved chart and horizontal Mermaid | Substitute the discarded showcase chart/diagram defaults |
+| Change content, IDs, data, and necessary component count | Change palette, font, spacing, radii, or visual identity |
+| Keep extensions as secondary examples using existing patterns | Replace the original report with a component catalog |
+| Ask when an essential new interaction has no defined pattern | Invent a new design system |
+| Verify evidence and label limitations | Copy fictional example claims into real reports |
+| Test included components in both themes, desktop/mobile, and print | Claim untested behavior or Google/OpenAI affiliation |

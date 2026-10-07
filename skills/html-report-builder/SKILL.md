@@ -17,14 +17,14 @@ Deliver a single `.html` file. Do not create a site shell, top navigation, or le
 - Internet access when using CDN-hosted Tailwind CSS, Chart.js, Mermaid, KaTeX, or Highlight.js.
 - The user's source data, claims, citations, and code. Do not invent factual report content.
 - Read all of [DESIGN.md](DESIGN.md) before building. It is the authoritative design contract in Google's DESIGN.md format, with exact tokens, component rules, responsive behavior, themes, fallbacks, and print styling.
-- Read [assets/example-report.html](assets/example-report.html), then reuse its matching markup, embedded styles, and behaviors. Replace illustrative content/data and omit irrelevant showcase components; do not reinterpret the design.
+- Read [assets/example-report.html](assets/example-report.html), then preserve the original Northstar report's layout, typography, colors, fixed utility buttons, flat KPI strip, executive prose grid, chart styling, and right rail. Additional component examples are secondary detail under Methodology, not an alternative page design.
 
 ## Execution Steps
 
 1. **Define the report contract.** Identify the audience, report question, supplied evidence, intended filename, and the sections necessary to answer the question. If details are missing, make conservative assumptions and label illustrative data clearly.
 2. **Choose only useful components.** Use prose for explanation, KPI tiles for a few headline numbers, a chart for patterns, a table for exact values, Mermaid for relationships or flow, KaTeX for real equations, and highlighted code for implementation detail. Do not add a component merely to demonstrate it.
 3. **Plan one narrative.** Start with the conclusion or executive summary, move through evidence and interpretation, and finish with implications or next actions. Give every major section a stable, kebab-case `id`.
-4. **Build one HTML document.** Preserve the example's semantic layout, CSS-variable token mapping, reusable component classes, and embedded fallback styles. Use Tailwind utilities for incidental layout, not competing component skins. All report data and initialization stay inside the document.
+4. **Build one HTML document.** Preserve the example's semantic layout, Tailwind utility patterns, and small behavior-specific CSS. DESIGN.md names the existing values; it does not require rewriting the example into a new component framework. Replace illustrative content/data and omit irrelevant secondary examples. All report data and initialization stay inside the document.
 5. **Apply the design contract without design decisions.** Use the exact values and patterns in DESIGN.md. Decide only content, section names, and which evidence-backed components are useful. Do not select alternate palettes, fonts, layouts, radii, chart skins, or navigation patterns. Explicit user design overrides take precedence. For a genuinely essential interactive element with no defined pattern, ask rather than inventing a new design.
 6. **Add the right-side navigator.** On large screens, use a sticky narrow `aside` to the right of the reading column. Link to each major section, expose the active section with a slim border or stronger text, use `aria-label="On this page"`, and update state with `IntersectionObserver`. On smaller screens, replace it with a compact `<details>` contents control above the report.
 7. **Support both themes.** Set `darkMode: 'class'`, initialize the theme before paint from `localStorage` or `prefers-color-scheme`, provide an accessible toggle, persist the choice, and update Chart.js/Mermaid colors when the theme changes.
@@ -47,7 +47,7 @@ Keep all report data and initialization code inside the HTML file. If the user r
 ## Quality Bar
 
 - The first viewport states the topic, date/context, executive takeaway, and key metrics without feeling like a marketing landing page.
-- The exact responsive frame, typography, component tokens, and right-side navigation match DESIGN.md and its showcase.
+- The responsive frame, typography, components, and navigation match the original Northstar example as documented in DESIGN.md. The file-format migration must not change the report's feeling or layout.
 - Every visualization answers a stated question and has a prose interpretation.
 - Exact values remain available in text or a table; never make a chart the only representation of critical data.
 - Light and dark modes are deliberately styled, not merely color-inverted.
