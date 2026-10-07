@@ -1,470 +1,558 @@
 <!doctype html>
-<html lang="en" class="scroll-smooth">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="An example single-page engineering report with charts, tables, diagrams, math, code, and light/dark mode.">
-  <title>Northstar API · Reliability review</title>
-
+  <meta name="description" content="Quiet Report component showcase. All measurements are illustrative, not production evidence.">
+  <title>Quiet Report · Component showcase</title>
   <script>
     (() => {
-      const stored = localStorage.getItem('report-theme');
-      const previewTheme = new URLSearchParams(location.search).get('theme');
-      const dark = previewTheme === 'dark' || (previewTheme !== 'light' && (stored ? stored === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches));
+      let stored;
+      try { stored = localStorage.getItem('report-theme'); } catch {}
+      const preview = new URLSearchParams(location.search).get('theme');
+      window.reportThemeExplicit = preview === 'light' || preview === 'dark' || stored === 'light' || stored === 'dark';
+      const theme = preview === 'light' || preview === 'dark' ? preview : stored;
+      const dark = theme === 'dark' || (theme !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
       document.documentElement.classList.toggle('dark', dark);
       document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
     })();
   </script>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: { ink: '#0d0d0d', paper: '#fbfbfb' },
-          fontFamily: {
-            sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
-            mono: ['SFMono-Regular', 'Cascadia Code', 'Roboto Mono', 'ui-monospace', 'monospace']
-          }
-        }
-      }
-    };
-  </script>
+  <script>if (window.tailwind) tailwind.config = { darkMode: 'class' };</script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&icon_names=add,check_circle,contrast,error,info,lightbulb,swap_vert,warning&display=block">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.10.0/build/styles/github-dark.min.css">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&icon_names=add,contrast,info&display=block">
   <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.10.0/build/highlight.min.js"></script>
-
   <style>
-    :root { --rule: #e4e4e7; --muted: #71717a; --chart-grid: #e4e4e7; }
-    .dark { --rule: #27272a; --muted: #a1a1aa; --chart-grid: #27272a; }
-    body { text-rendering: optimizeLegibility; }
-    section { scroll-margin-top: 2rem; }
-    .section-link { border-left: 1px solid var(--rule); color: var(--muted); transition: color 150ms ease-out, border-color 150ms ease-out; }
-    .section-link:hover { color: inherit; }
-    .section-link.active { border-left-color: currentColor; color: inherit; font-weight: 600; }
-    .metric-value, .tabular { font-variant-numeric: tabular-nums; }
-    pre code.hljs { padding: 1.25rem; background: #0d0d0d; }
-    .code-wrap pre { margin: 0; overflow: auto; }
-    .mermaid svg { max-width: 100%; height: auto; margin-inline: auto; }
-    .katex-display { overflow-x: auto; overflow-y: hidden; padding-block: .5rem; }
-    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20; }
-    .control-motion { transition: color 150ms ease-out, background-color 150ms ease-out, border-color 150ms ease-out, box-shadow 150ms ease-out, transform 120ms ease-out; }
-    .control-motion:active { transform: scale(.97); }
-    .disclosure { transition: border-color 180ms ease-out, background-color 180ms ease-out; }
-    .disclosure-body { overflow: hidden; transform-origin: top; }
-    .disclosure-icon { transition: transform 180ms cubic-bezier(.2, .8, .2, 1), color 150ms ease-out; }
-    details[open] .disclosure-icon { transform: rotate(45deg); }
-    body.theme-transition, body.theme-transition * { transition-property: color, background-color, border-color, box-shadow; transition-duration: 180ms; transition-timing-function: ease-out; }
-    dialog::backdrop { background: rgb(0 0 0 / .48); }
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
-    }
+    /* Exact DESIGN.md tokens. This embedded baseline also works without Tailwind. */
+    :root { --text:#18181b; --muted:#52525b; --accent:#1d4ed8; --page:#ffffff; --surface:#fafafa; --border:#d4d4d8; --hover:#f4f4f5; --on-accent:#ffffff; --accent-hover:#1e40af; --info:#1d4ed8; --success:#047857; --warning:#92400e; --danger:#b91c1c; --tip:#6d28d9; --code-background:#0d0d0d; --code-text:#f4f4f5; --code-muted:#a1a1aa; --code-border:#52525b; --sans:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; --mono:ui-monospace,"Cascadia Code","SFMono-Regular",Consolas,monospace; }
+    .dark { --text:#f4f4f5; --muted:#a1a1aa; --accent:#93c5fd; --page:#09090b; --surface:#18181b; --border:#52525b; --hover:#27272a; --on-accent:#09090b; --accent-hover:#bfdbfe; --info:#93c5fd; --success:#6ee7b7; --warning:#fcd34d; --danger:#fca5a5; --tip:#c4b5fd; }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    :root body { margin:0; background:var(--page); color:var(--text); font:400 16px/1.75 var(--sans); text-rendering:optimizeLegibility; }
+    body h1,body h2,body h3,body p,body figure,body blockquote,body dl,body pre { margin:0; }
+    body h1 { font-size:40px; line-height:1.15; letter-spacing:-.035em; font-weight:600; }
+    body h2 { font-size:28px; line-height:1.25; letter-spacing:-.02em; font-weight:600; }
+    body h3 { font-size:20px; line-height:1.4; font-weight:600; }
+    body strong,body dt { font-weight:600; }
+    body a { color:var(--accent); text-decoration:underline; text-underline-offset:3px; overflow-wrap:anywhere; }
+    a:hover { text-decoration-thickness:2px; }
+    body button,body input,body select,body textarea { font:500 14px/1.5 var(--sans); }
+    button { cursor:pointer; }
+    :focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+    [hidden] { display:none !important; }
+    .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+    .skip-link { position:fixed; top:8px; left:8px; z-index:10; transform:translateY(-150%); background:var(--page); padding:12px; border:1px solid var(--border); }
+    .skip-link:focus { transform:none; }
+    .frame { display:grid; grid-template-columns:minmax(0,820px) 200px; gap:56px; max-width:1180px; margin:auto; padding:64px 40px 80px; }
+    main { min-width:0; }
+    header { padding-bottom:32px; margin-bottom:32px; border-bottom:1px solid var(--border); }
+    .actions,.controls { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    .actions { justify-content:flex-end; margin-bottom:24px; }
+    .eyebrow { font-size:12px; font-weight:600; line-height:1.5; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:16px; }
+    .lead { font-size:18px; line-height:1.7; color:var(--muted); margin-top:16px; max-width:72ch; }
+    .body-copy { max-width:72ch; }
+    .body-copy p + p { margin-top:16px; }
+    .intro { font-size:14px; line-height:1.6; color:var(--muted); margin-top:12px; max-width:72ch; }
+    .stack > * + * { margin-top:16px; }
+    .component { margin-top:24px; }
+    .small { font-size:14px; line-height:1.6; }
+    .caption,figcaption,.status { font-size:12px; line-height:1.6; color:var(--muted); }
+    figcaption,.status { margin-top:8px; }
+    section { scroll-margin-top:32px; margin-bottom:80px; }
+    section + section { border-top:1px solid var(--border); padding-top:32px; }
+    .section-label { color:var(--accent); margin-bottom:8px; }
+    .metrics { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); margin-top:24px; border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+    .metrics > div { padding:16px; }
+    .metrics > div + div { border-left:1px solid var(--border); }
+    .metrics dt { font:400 12px/1.6 var(--sans); color:var(--muted); }
+    .metrics dd { margin:8px 0 0; font-size:28px; font-weight:600; line-height:1.2; font-variant-numeric:tabular-nums; }
+    .metrics .caption { margin-top:8px; }
+    .button { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:44px; padding:8px 12px; border:1px solid var(--border); border-radius:6px; background:var(--page); color:var(--text); font:500 14px/1.5 var(--sans); text-decoration:none; transition:color 150ms ease-out,background-color 150ms ease-out,border-color 150ms ease-out,transform 150ms ease-out; }
+    .button:hover { background:var(--hover); }
+    .button:active { transform:scale(.98); }
+    .button.primary { background:var(--accent); border-color:var(--accent); color:var(--on-accent); }
+    .button.primary:hover { background:var(--accent-hover); border-color:var(--accent-hover); }
+    .button.tertiary { border-color:transparent; background:transparent; color:var(--accent); }
+    .button:disabled { opacity:.55; cursor:not-allowed; transform:none; background:var(--page); }
+    .icon { display:none; flex-shrink:0; font:400 20px/1 'Material Symbols Outlined'; font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 20; }
+    .icons-ready .icon { display:inline-block; }
+    .badge { display:inline-block; border:1px solid currentColor; border-radius:9999px; padding:4px 8px; font-size:12px; line-height:1.6; font-weight:400; white-space:nowrap; }
+    .tone-note { --tone:var(--muted); } .tone-info { --tone:var(--info); } .tone-tip { --tone:var(--tip); } .tone-success { --tone:var(--success); } .tone-warning { --tone:var(--warning); } .tone-danger { --tone:var(--danger); }
+    .badge[class*="tone-"] { color:var(--tone); }
+    .callout { display:flex; align-items:flex-start; gap:12px; border:1px solid var(--tone); border-radius:12px; padding:16px; font-size:14px; line-height:1.6; background:var(--page); }
+    .callout .icon { margin-top:2px; color:var(--tone); }
+    .callout strong { color:var(--tone); }
+    body ul,body ol { padding-left:24px; margin:16px 0; }
+    body ul { list-style:disc; } body ol { list-style:decimal; }
+    li + li { margin-top:8px; }
+    li ul,li ol { margin-top:12px; }
+    body dd { margin:4px 0 16px; }
+    code,kbd { font:400 13px/1.7 var(--mono); }
+    :not(pre) > code,kbd { background:var(--surface); padding:2px 4px; border:1px solid var(--border); border-radius:4px; overflow-wrap:anywhere; }
+    body blockquote { border-left:2px solid var(--muted); padding:16px; background:var(--surface); font-size:14px; line-height:1.6; }
+    blockquote footer { margin-top:8px; color:var(--muted); font-size:12px; }
+    .rail nav { position:sticky; top:32px; max-height:calc(100dvh - 64px); overflow:auto; font-size:14px; line-height:1.6; }
+    .section-link { display:flex; align-items:center; min-height:44px; border-left:1px solid var(--border); padding:8px 16px; color:var(--muted); text-decoration:none; transition:color 150ms ease-out,border-color 150ms ease-out; }
+    .section-link:hover { color:var(--text); }
+    .section-link[aria-current="location"] { color:var(--accent); border-left-color:var(--accent); font-weight:600; }
+    .mobile-contents { display:none; margin-bottom:32px; }
+    .mobile-contents nav { padding:0 16px 16px; }
+    .disclosure { border:1px solid var(--border); border-radius:8px; overflow:hidden; background:var(--page); transition:border-color 180ms ease-out; }
+    .disclosure + .disclosure { margin-top:12px; }
+    .disclosure summary { min-height:44px; padding:16px; cursor:pointer; font:500 14px/1.6 var(--sans); transition:background-color 150ms ease-out; }
+    .disclosure summary:hover,.disclosure[open] > summary { background:var(--hover); }
+    .disclosure[open] { border-color:var(--muted); }
+    .disclosure summary:focus-visible { outline-offset:-2px; }
+    .icons-ready .disclosure summary { display:flex; justify-content:space-between; align-items:center; gap:12px; list-style:none; }
+    .icons-ready .disclosure summary::-webkit-details-marker { display:none; }
+    .disclosure .icon { transition:transform 180ms ease-out; color:var(--muted); }
+    .disclosure[open] > summary .icon { transform:rotate(45deg); }
+    .disclosure-body { overflow:hidden; }
+    .disclosure-content { padding:16px; padding-top:0; font-size:14px; line-height:1.6; }
+    .figure-box { border:1px solid var(--border); border-radius:8px; padding:16px; }
+    .figure-title { font:500 14px/1.6 var(--sans); margin-bottom:16px; }
+    .chart-plot { position:relative; height:340px; }
+    .table-scroll { overflow-x:auto; border:1px solid var(--border); border-radius:8px; }
+    table { width:100%; border-collapse:collapse; font-size:14px; line-height:1.6; font-variant-numeric:tabular-nums; }
+    caption { text-align:left; padding:12px; color:var(--muted); font-size:12px; }
+    thead { background:var(--surface); }
+    th,td { padding:12px; text-align:left; border-bottom:1px solid var(--border); }
+    th { font-weight:500; }
+    tbody tr:last-child > * { border-bottom:0; }
+    .numeric { text-align:right; white-space:nowrap; }
+    .sort-button { min-height:44px; padding:8px 0; border:0; color:inherit; background:transparent; display:inline-flex; align-items:center; gap:8px; font:inherit; cursor:pointer; }
+    .diagram-box { padding:24px; overflow-x:auto; }
+    .diagram-box svg { max-width:100%; height:auto; display:block; margin:auto; }
+    .diagram-description { margin-top:16px; }
+    .equation { padding:24px; border:1px solid var(--border); border-radius:8px; background:var(--surface); text-align:center; overflow-x:auto; }
+    .katex-display { margin:0; overflow-x:auto; overflow-y:hidden; padding:8px 0; }
+    .equation .katex { font-size:1.05em; }
+    .code-panel { background:var(--code-background); color:var(--code-text); border:1px solid var(--code-border); border-radius:8px; overflow:hidden; }
+    .code-toolbar { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 16px; border-bottom:1px solid var(--code-border); font-size:12px; color:var(--code-muted); }
+    .code-toolbar .button { background:var(--code-background); color:var(--code-text); border-color:var(--code-border); }
+    .code-toolbar .button:hover { background:#27272a; }
+    pre { overflow:auto; }
+    pre code,pre code.hljs { display:block; padding:16px; font:400 13px/1.7 var(--mono); background:var(--code-background); color:var(--code-text); }
+    .panel { border:1px solid var(--border); border-radius:8px; padding:24px; }
+    .state-panel { background:var(--surface); }
+    body .timeline { list-style:none; border-left:1px solid var(--border); padding-left:16px; }
+    .field-grid { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+    label,.field-label { display:block; font-size:14px; font-weight:500; margin-bottom:8px; }
+    .input { display:block; width:100%; min-height:44px; padding:10px 12px; border:1px solid var(--border); border-radius:6px; background:var(--page); color:var(--text); transition:background-color 150ms ease-out,border-color 150ms ease-out; }
+    .input::placeholder { color:var(--muted); }
+    .input:disabled { opacity:.55; }
+    textarea.input { min-height:112px; resize:vertical; }
+    .input[aria-invalid="true"] { border-color:var(--danger); }
+    .helper { font-size:12px; line-height:1.6; margin-top:8px; color:var(--muted); }
+    .error-text { color:var(--danger); }
+    fieldset { padding:0; border:0; margin:0; min-width:0; }
+    legend { font-size:14px; font-weight:500; margin-bottom:8px; }
+    .choice { display:flex; align-items:center; gap:8px; min-height:44px; margin:0; }
+    input[type="checkbox"],input[type="radio"] { accent-color:var(--accent); width:16px; height:16px; }
+    .tooltip-wrap { position:relative; display:inline-block; }
+    .tooltip { display:none; position:absolute; bottom:calc(100% + 8px); left:0; z-index:2; width:240px; max-width:calc(100vw - 48px); padding:8px; border-radius:6px; background:var(--code-background); color:var(--code-text); font-size:14px; line-height:1.6; }
+    .tooltip-wrap:not([data-dismissed]):hover .tooltip,.tooltip-wrap:not([data-dismissed]):focus-within .tooltip { display:block; }
+    progress { display:block; appearance:none; width:100%; height:8px; border:none; border-radius:9999px; overflow:hidden; background:var(--border); accent-color:var(--accent); margin:12px 0; }
+    progress::-webkit-progress-bar { background:var(--border); } progress::-webkit-progress-value { background:var(--accent); } progress::-moz-progress-bar { background:var(--accent); }
+    progress:not([value]) { opacity:.6; }
+    .evidence-image { width:100%; height:auto; border:1px solid var(--border); border-radius:8px; background:var(--surface); display:block; }
+    dialog { max-width:480px; width:calc(100% - 48px); padding:24px; border:1px solid var(--border); border-radius:8px; background:var(--page); color:var(--text); box-shadow:0 16px 48px rgb(0 0 0 / .2); }
+    dialog::backdrop { background:rgb(0 0 0 / .48); }
+    .report-footer { border-top:1px solid var(--border); padding-top:24px; font-size:12px; line-height:1.6; color:var(--muted); }
+    .theme-transition,.theme-transition * { transition:color 180ms ease-out,background-color 180ms ease-out,border-color 180ms ease-out; }
+    @media (max-width:1023px) { .frame { grid-template-columns:minmax(0,1fr); padding-inline:24px; } .rail { display:none; } .mobile-contents { display:block; } }
+    @media (max-width:639px) { .frame { padding-block:40px 56px; } body h1 { font-size:32px; line-height:1.2; } body h2 { font-size:24px; line-height:1.3; } section { margin-bottom:56px; } .metrics { grid-template-columns:repeat(2,minmax(0,1fr)); } .metrics > div:nth-child(3) { border-left:0; } .metrics > div:nth-child(n+3) { border-top:1px solid var(--border); } .chart-plot { height:300px; } .field-grid { grid-template-columns:1fr; } }
+    @media (max-width:399px) { .metrics { grid-template-columns:1fr; } .metrics > div + div { border-left:0; border-top:1px solid var(--border); } }
+    @media (prefers-reduced-motion:reduce) { *,*::before,*::after { scroll-behavior:auto !important; transition:none !important; animation:none !important; } }
+    @page { margin:16mm; }
     @media print {
-      html { color-scheme: light !important; }
-      body { background: white !important; color: black !important; }
-      .no-print { display: none !important; }
-      .print-full { max-width: none !important; padding: 0 !important; display: block !important; }
-      section, figure, pre, table { break-inside: avoid; }
-      a { color: inherit !important; text-decoration: none !important; }
+      html { color-scheme:light !important; }
+      :root,.dark { --text:#000; --muted:#000; --accent:#000; --page:#fff; --surface:#fff; --border:#999; --hover:#fff; --info:#000; --success:#000; --warning:#000; --danger:#000; --tip:#000; --code-background:#fff; --code-text:#000; --code-muted:#000; --code-border:#999; }
+      .no-print,.rail,.mobile-contents,.chart-plot,.diagram-render,dialog { display:none !important; }
+      .frame { display:block; padding:0; max-width:none; }
+      section { margin-bottom:32px; }
+      h1,h2,h3,summary,figcaption,dt,.eyebrow { break-after:avoid; }
+      tr,.callout,.metrics,.code-panel,.panel,.disclosure,figure { break-inside:avoid; }
+      .status,.sort-button .icon,.disclosure summary .icon { display:none !important; }
+      .figure-box:has(.chart-plot) { border:0; padding:0; }
+      .table-scroll,.equation,pre,.disclosure,.disclosure-body { overflow:visible; height:auto !important; }
+      .disclosure-content { display:block !important; }
+      .katex-display { overflow:visible; white-space:normal; }
+      .katex { font-size:.85em !important; }
+      table { min-width:0 !important; }
+      pre code,pre code.hljs,pre code * { color:black !important; background:white !important; white-space:pre-wrap; overflow-wrap:anywhere; }
+      a { color:black; }
+      .status { color:black; }
     }
   </style>
 </head>
-
-<body class="bg-white text-zinc-950 antialiased selection:bg-blue-200 dark:bg-black dark:text-zinc-100 dark:selection:bg-blue-900">
-  <div class="fixed right-4 top-4 z-50 flex gap-2 no-print">
-    <button id="theme-toggle" type="button" class="control-motion inline-flex h-9 items-center gap-2 rounded-full border border-zinc-200 bg-white/90 px-3 text-xs font-medium shadow-sm backdrop-blur hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-800 dark:bg-zinc-950/90 dark:hover:bg-zinc-900" aria-label="Switch color theme">
-      <span class="material-symbols-outlined text-[16px]" aria-hidden="true">contrast</span><span class="hidden sm:inline">Theme</span>
-    </button>
-    <button type="button" onclick="window.print()" class="control-motion inline-flex h-9 items-center rounded-full border border-zinc-200 bg-white/90 px-3 text-xs font-medium shadow-sm backdrop-blur hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-zinc-800 dark:bg-zinc-950/90 dark:hover:bg-zinc-900">
-      Print
-    </button>
-  </div>
-
-  <div class="print-full mx-auto grid max-w-[1180px] grid-cols-1 gap-14 px-6 pb-24 pt-20 lg:grid-cols-[minmax(0,820px)_200px] lg:px-10 lg:pt-24">
-    <main class="min-w-0">
-      <header class="mb-16 border-b border-zinc-200 pb-12 dark:border-zinc-800">
-        <div class="mb-6 flex flex-wrap items-center gap-3 text-xs font-medium uppercase tracking-[0.16em] text-zinc-500 dark:text-zinc-400">
-          <span>Engineering report</span><span aria-hidden="true">·</span><time datetime="2026-09-19">19 Sep 2026</time><span class="rounded-full border border-emerald-300 px-2 py-1 normal-case tracking-normal text-emerald-700 dark:border-emerald-900 dark:text-emerald-400">Healthy</span>
+<body>
+  <a class="skip-link no-print" href="#report">Skip to report</a>
+  <div class="frame">
+    <main id="report" tabindex="-1">
+      <header>
+        <div class="actions no-print">
+          <button id="theme-toggle" class="button" type="button" aria-pressed="false"><span class="icon" aria-hidden="true">contrast</span>Dark theme</button>
+          <button id="print-report" class="button" type="button">Print</button>
         </div>
-        <h1 class="max-w-3xl text-4xl font-semibold tracking-[-0.035em] sm:text-5xl">Northstar API reliability review</h1>
-        <p class="mt-5 max-w-2xl text-lg leading-8 text-zinc-600 dark:text-zinc-400">Latency improved while traffic grew, but the checkout endpoint now consumes most of the error budget. The next reliability cycle should prioritize that single path.</p>
-
-        <dl class="mt-10 grid grid-cols-2 border-y border-zinc-200 sm:grid-cols-4 dark:border-zinc-800">
-          <div class="border-b border-r border-zinc-200 py-5 pr-4 sm:border-b-0 dark:border-zinc-800">
-            <dt class="text-xs text-zinc-500 dark:text-zinc-400">Availability</dt>
-            <dd class="metric-value mt-2 text-2xl font-semibold">99.95%</dd>
-            <p class="mt-1 text-xs text-emerald-700 dark:text-emerald-400">+0.03 pp</p>
-          </div>
-          <div class="border-b border-zinc-200 py-5 pl-4 sm:border-b-0 sm:border-r sm:pr-4 dark:border-zinc-800">
-            <dt class="text-xs text-zinc-500 dark:text-zinc-400">p95 latency</dt>
-            <dd class="metric-value mt-2 text-2xl font-semibold">184 ms</dd>
-            <p class="mt-1 text-xs text-emerald-700 dark:text-emerald-400">−19% month/month</p>
-          </div>
-          <div class="border-r border-zinc-200 py-5 pr-4 sm:pl-4 dark:border-zinc-800">
-            <dt class="text-xs text-zinc-500 dark:text-zinc-400">Requests</dt>
-            <dd class="metric-value mt-2 text-2xl font-semibold">81.4M</dd>
-            <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">+12% month/month</p>
-          </div>
-          <div class="py-5 pl-4">
-            <dt class="text-xs text-zinc-500 dark:text-zinc-400">Budget used</dt>
-            <dd class="metric-value mt-2 text-2xl font-semibold">43%</dd>
-            <p class="mt-1 text-xs text-amber-700 dark:text-amber-400">Watch checkout</p>
-          </div>
+        <p class="eyebrow">Component showcase · <time datetime="2026-10-07">7 Oct 2026</time> · Illustrative data</p>
+        <h1>Evidence first. Design already decided.</h1>
+        <p class="lead">This example implements every Quiet Report component family. The fictional latency sample declines from 236 to 184 milliseconds; the rest of the page demonstrates presentation patterns, not a real service assessment.</p>
+        <dl class="metrics">
+          <div><dt>Observations</dt><dd>4</dd><p class="caption">Illustrative weeks</p></div>
+          <div><dt>Latest p95</dt><dd>184 ms</dd><p class="caption">Week 4</p></div>
+          <div><dt>p95 reduction</dt><dd>22%</dd><p class="caption">Rounded from 22.03%</p></div>
+          <div><dt>Endpoint sample</dt><dd>3</dd><p class="caption">Separate illustrative sample</p></div>
         </dl>
       </header>
-
-      <details data-animated-disclosure class="disclosure mb-12 rounded-lg border border-zinc-200 lg:hidden dark:border-zinc-800 no-print">
-        <summary class="flex cursor-pointer list-none items-center justify-between rounded-lg px-4 py-3 text-sm font-medium outline-none hover:bg-zinc-50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500 dark:hover:bg-zinc-900/60">
-          <span>On this page</span><span class="material-symbols-outlined disclosure-icon text-[20px] text-zinc-400" aria-hidden="true">add</span>
-        </summary>
-        <div class="disclosure-body"><nav class="grid gap-2 px-4 pb-4 pt-1 text-sm text-zinc-600 dark:text-zinc-400" aria-label="Mobile table of contents">
-          <a href="#summary">Executive summary</a><a href="#trend">Latency trend</a><a href="#endpoints">Endpoints</a><a href="#flow">Incident flow</a><a href="#math">Error budget</a><a href="#code">Implementation</a><a href="#method">Methodology</a>
+      <details class="disclosure mobile-contents no-print" data-animated-disclosure>
+        <summary>On this page <span class="icon" aria-hidden="true">add</span></summary>
+        <div class="disclosure-body"><nav aria-label="On this page">
+          <a class="section-link" href="#readout" aria-current="location">Readout and text</a><a class="section-link" href="#admonitions">Admonitions</a><a class="section-link" href="#charts">Charts</a><a class="section-link" href="#table">Tables</a><a class="section-link" href="#diagrams">Diagrams and images</a><a class="section-link" href="#math">Mathematics</a><a class="section-link" href="#code">Code</a><a class="section-link" href="#disclosures">Expandable sections</a><a class="section-link" href="#supporting">Supporting evidence</a><a class="section-link" href="#controls">Controls and states</a><a class="section-link" href="#references">References</a>
         </nav></div>
       </details>
 
-      <section id="summary" class="mb-20" aria-labelledby="summary-title">
-        <p class="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-blue-700 dark:text-blue-400">01 · Readout</p>
-        <h2 id="summary-title" class="text-2xl font-semibold tracking-tight sm:text-3xl">Executive summary</h2>
-        <div class="mt-6 grid gap-8 text-[15px] leading-7 text-zinc-700 sm:grid-cols-2 dark:text-zinc-300">
-          <p><strong class="text-zinc-950 dark:text-white">The system absorbed more demand with less latency.</strong> A cache-policy rollout reduced p95 latency by 19% while request volume increased 12%. The gain appears durable across every observed region.</p>
-          <p><strong class="text-zinc-950 dark:text-white">Risk is concentrated, not systemic.</strong> Checkout produced 61% of failed requests despite carrying only 18% of traffic. The failure mode is an upstream payment timeout with a known mitigation.</p>
-        </div>
-        <div role="note" class="mt-8 flex items-start gap-4 rounded-xl border border-zinc-300 px-5 py-4 text-sm leading-6 text-zinc-800 dark:border-zinc-700 dark:text-zinc-200">
-          <span class="material-symbols-outlined mt-0.5 shrink-0 text-[20px] text-zinc-700 dark:text-zinc-300" aria-hidden="true">info</span>
-          <p><strong class="font-semibold text-zinc-950 dark:text-white">Recommendation:</strong> ship bounded retries and a circuit breaker for the payment adapter before expanding traffic allocation beyond 60%.</p>
+      <section id="readout" aria-labelledby="readout-title">
+        <p class="eyebrow section-label">01 · Narrative</p><h2 id="readout-title">A readable conclusion, then the evidence</h2>
+        <div class="body-copy component stack">
+          <p><strong>Use the supplied facts, not the showcase's story.</strong> This paragraph demonstrates normal prose, <a href="#charts">an internal link</a>, an inline identifier <code>p95_ms</code>, and a keyboard key <kbd>Tab</kbd>. The local design contract follows Google's open DESIGN.md format.<sup><a id="cite-1" href="#ref-1" aria-label="Reference 1">[1]</a></sup></p>
+          <h3>What belongs in an executive summary?</h3>
+          <ul><li>The conclusion the reader needs first.</li><li>The strongest evidence and its limitations.<ul><li>Separate observed facts from proposed actions.</li></ul></li><li>A concrete next step supported by the source material.</li></ul>
+          <dl><dt>Observation</dt><dd>A measured or supplied fact with a defined unit and period.</dd><dt>Interpretation</dt><dd>A conclusion whose supporting evidence is visible nearby.</dd></dl>
+          <blockquote><p>“This quotation is invented solely to demonstrate a quoted passage, not attributed to a real person.”</p><footer>Illustrative quotation, component showcase</footer></blockquote>
         </div>
       </section>
 
-      <section id="trend" class="mb-20" aria-labelledby="trend-title">
-        <div class="border-t border-zinc-200 pt-8 dark:border-zinc-800">
-          <p class="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-blue-700 dark:text-blue-400">02 · Performance</p>
-          <div class="flex flex-wrap items-end justify-between gap-3">
-            <div><h2 id="trend-title" class="text-2xl font-semibold tracking-tight sm:text-3xl">Latency moved in the right direction</h2><p class="mt-3 max-w-2xl text-sm leading-6 text-zinc-600 dark:text-zinc-400">The cache rollout began in week three. Both median and tail latency declined without a corresponding error spike.</p></div>
-            <span class="rounded-full bg-zinc-100 px-3 py-1 text-xs text-zinc-600 dark:bg-zinc-900 dark:text-zinc-400">Lower is better</span>
-          </div>
+      <section id="admonitions" aria-labelledby="admonitions-title">
+        <p class="eyebrow section-label">02 · Meaningful emphasis</p><h2 id="admonitions-title">Six admonition types, one consistent shape</h2>
+        <p class="intro">Each has an explicit label and semantic icon. Static callouts are notes, not live alerts.</p>
+        <div class="component stack">
+          <div class="callout tone-note" role="note"><span class="icon" aria-hidden="true">info</span><p><strong>Note:</strong> All measurements in this file are illustrative.</p></div>
+          <div class="callout tone-info" role="note"><span class="icon" aria-hidden="true">info</span><p><strong>Information:</strong> The weekly and endpoint samples are separate datasets, not a reconciled production aggregate.</p></div>
+          <div class="callout tone-tip" role="note"><span class="icon" aria-hidden="true">lightbulb</span><p><strong>Tip:</strong> Use the exact-value table when you need a precise measurement.</p></div>
+          <div class="callout tone-success" role="note"><span class="icon" aria-hidden="true">check_circle</span><p><strong>Success:</strong> The illustrative week 4 p95 is below the week 1 value.</p></div>
+          <div class="callout tone-warning" role="note"><span class="icon" aria-hidden="true">warning</span><p><strong>Warning:</strong> Four observations do not establish a causal effect.</p></div>
+          <div class="callout tone-danger" role="note"><span class="icon" aria-hidden="true">error</span><p><strong>Danger:</strong> Do not use fictional example values for an operational decision.</p></div>
         </div>
-        <figure class="mt-8">
-          <div class="h-[340px] border-y border-zinc-200 py-5 dark:border-zinc-800"><canvas id="latency-chart" aria-label="Weekly p50 and p95 API latency line chart" role="img"></canvas><p id="chart-fallback" class="hidden text-sm text-zinc-500">Chart unavailable. Weekly p95 values: 236, 228, 214, 203, 196, 189, and 184 milliseconds.</p></div>
-          <figcaption class="mt-3 text-xs leading-5 text-zinc-500 dark:text-zinc-400">Weekly latency across successful production requests. The vertical annotation marks the cache-policy rollout.</figcaption>
+      </section>
+
+      <section id="charts" aria-labelledby="charts-title">
+        <p class="eyebrow section-label">03 · Visual evidence</p><h2 id="charts-title">Time uses lines. Comparisons use bars.</h2>
+        <p class="intro">Plots share fixed colors, units, typography, and spacing. Values stay available without a chart library.</p>
+        <figure class="component">
+          <div class="figure-box"><p class="figure-title">Weekly request latency (ms)</p><div class="chart-plot"><canvas id="latency-chart" role="img" aria-label="Illustrative latency: p95 falls from 236 to 184 milliseconds over four weeks; exact values follow."></canvas></div><p id="line-fallback" class="caption">Chart unavailable or loading. Exact values are in the table below.</p></div>
+          <figcaption>Illustrative p95 decreased by 52 ms (22.03%); p50 decreased by 18 ms. Both axes start at zero.</figcaption>
+        </figure>
+        <details class="disclosure component" data-animated-disclosure open>
+          <summary>Exact weekly chart values <span class="icon" aria-hidden="true">add</span></summary>
+          <div class="disclosure-body"><div class="disclosure-content"><div class="table-scroll" tabindex="0" role="region" aria-label="Weekly latency values"><table><caption>Illustrative weekly sample, all latency values in milliseconds</caption><thead><tr><th scope="col">Week</th><th scope="col" class="numeric">p50 (ms)</th><th scope="col" class="numeric">p95 (ms)</th></tr></thead><tbody><tr><th scope="row">1</th><td class="numeric">82</td><td class="numeric">236</td></tr><tr><th scope="row">2</th><td class="numeric">80</td><td class="numeric">228</td></tr><tr><th scope="row">3</th><td class="numeric">71</td><td class="numeric">203</td></tr><tr><th scope="row">4</th><td class="numeric">64</td><td class="numeric">184</td></tr></tbody></table></div></div></div>
+        </details>
+        <figure class="component">
+          <div class="figure-box"><p class="figure-title">Endpoint p95 comparison (ms)</p><div class="chart-plot"><canvas id="endpoint-chart" role="img" aria-label="Illustrative endpoint latency: search 142, catalog 171, checkout 412 milliseconds. Exact values are in the endpoint table."></canvas></div><p id="bar-fallback" class="caption">Chart unavailable or loading. Exact values are in the endpoint table.</p></div>
+          <figcaption>Checkout has the largest illustrative p95, 412 ms. This separate endpoint sample does not explain the weekly trend.</figcaption>
         </figure>
       </section>
 
-      <section id="endpoints" class="mb-20" aria-labelledby="endpoints-title">
-        <div class="border-t border-zinc-200 pt-8 dark:border-zinc-800">
-          <p class="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-blue-700 dark:text-blue-400">03 · Detail</p>
-          <h2 id="endpoints-title" class="text-2xl font-semibold tracking-tight sm:text-3xl">Checkout is the clear outlier</h2>
-          <p class="mt-3 max-w-2xl text-sm leading-6 text-zinc-600 dark:text-zinc-400">Filter the endpoints or select a header to sort. The illustrative values below reconcile to the headline indicators.</p>
+      <section id="table" aria-labelledby="table-title">
+        <p class="eyebrow section-label">04 · Exact values</p><h2 id="table-title">Accessible sorting, filtering, and status</h2>
+        <p class="intro">Filter endpoint names or select a column header. These three rows are a fictional component demonstration.</p>
+        <div class="component no-print"><label for="table-filter">Filter endpoints</label><input id="table-filter" class="input" type="search" placeholder="For example, checkout" aria-describedby="filter-help"><p id="filter-help" class="helper">Filter locally by endpoint or assessment. No data leaves this page.</p></div>
+        <div class="table-scroll component" tabindex="0" role="region" aria-label="Endpoint metrics">
+          <table id="endpoint-table" style="min-width:560px"><caption>Illustrative endpoint sample</caption><thead><tr>
+            <th scope="col"><button class="sort-button" data-sort="0" type="button">Endpoint <span class="icon" aria-hidden="true">swap_vert</span></button></th>
+            <th scope="col" class="numeric"><button class="sort-button" data-sort="1" data-numeric type="button">p95 (ms) <span class="icon" aria-hidden="true">swap_vert</span></button></th>
+            <th scope="col" class="numeric"><button class="sort-button" data-sort="2" data-numeric type="button">Error rate (%) <span class="icon" aria-hidden="true">swap_vert</span></button></th>
+            <th scope="col">Assessment</th>
+          </tr></thead><tbody>
+            <tr><th scope="row"><code>/v1/search</code></th><td class="numeric">142</td><td class="numeric">0.02</td><td><span class="badge tone-success">Within target</span></td></tr>
+            <tr><th scope="row"><code>/v1/catalog</code></th><td class="numeric">171</td><td class="numeric">0.03</td><td><span class="badge tone-note">Observe</span></td></tr>
+            <tr><th scope="row"><code>/v1/checkout</code></th><td class="numeric">412</td><td class="numeric">0.31</td><td><span class="badge tone-warning">Needs attention</span></td></tr>
+          </tbody></table>
         </div>
-        <div class="mt-6 flex items-center gap-3 no-print">
-          <label for="table-filter" class="sr-only">Filter endpoints</label>
-          <input id="table-filter" type="search" placeholder="Filter endpoints…" class="control-motion w-full max-w-sm rounded-md border border-zinc-300 bg-transparent px-3 py-2 text-sm outline-none placeholder:text-zinc-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700">
-        </div>
-        <div class="mt-4 overflow-x-auto border-y border-zinc-200 dark:border-zinc-800">
-          <table id="endpoint-table" class="w-full min-w-[650px] text-left text-sm">
-            <caption class="sr-only">Reliability metrics by API endpoint</caption>
-            <thead class="text-xs text-zinc-500 dark:text-zinc-400">
-              <tr>
-                <th scope="col" class="px-3 py-3 font-medium"><button data-sort="0" type="button" class="control-motion rounded-sm hover:text-zinc-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:hover:text-white">Endpoint ↕</button></th>
-                <th scope="col" class="px-3 py-3 text-right font-medium"><button data-sort="1" data-numeric type="button" class="control-motion rounded-sm hover:text-zinc-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:hover:text-white">Traffic ↕</button></th>
-                <th scope="col" class="px-3 py-3 text-right font-medium"><button data-sort="2" data-numeric type="button" class="control-motion rounded-sm hover:text-zinc-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:hover:text-white">p95 ↕</button></th>
-                <th scope="col" class="px-3 py-3 text-right font-medium"><button data-sort="3" data-numeric type="button" class="control-motion rounded-sm hover:text-zinc-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:hover:text-white">Error rate ↕</button></th>
-                <th scope="col" class="px-3 py-3 font-medium">Assessment</th>
-              </tr>
-            </thead>
-            <tbody class="tabular divide-y divide-zinc-200 dark:divide-zinc-800">
-              <tr><th scope="row" class="px-3 py-4 font-mono text-xs font-medium">/v1/search</th><td class="px-3 py-4 text-right">31%</td><td class="px-3 py-4 text-right">142 ms</td><td class="px-3 py-4 text-right">0.02%</td><td class="px-3 py-4 text-emerald-700 dark:text-emerald-400">Within target</td></tr>
-              <tr><th scope="row" class="px-3 py-4 font-mono text-xs font-medium">/v1/catalog</th><td class="px-3 py-4 text-right">24%</td><td class="px-3 py-4 text-right">171 ms</td><td class="px-3 py-4 text-right">0.03%</td><td class="px-3 py-4 text-emerald-700 dark:text-emerald-400">Within target</td></tr>
-              <tr><th scope="row" class="px-3 py-4 font-mono text-xs font-medium">/v1/checkout</th><td class="px-3 py-4 text-right">18%</td><td class="px-3 py-4 text-right">412 ms</td><td class="px-3 py-4 text-right">0.31%</td><td class="px-3 py-4 text-amber-700 dark:text-amber-400">Action needed</td></tr>
-              <tr><th scope="row" class="px-3 py-4 font-mono text-xs font-medium">/v1/profile</th><td class="px-3 py-4 text-right">15%</td><td class="px-3 py-4 text-right">156 ms</td><td class="px-3 py-4 text-right">0.04%</td><td class="px-3 py-4 text-emerald-700 dark:text-emerald-400">Within target</td></tr>
-              <tr><th scope="row" class="px-3 py-4 font-mono text-xs font-medium">/v1/recommend</th><td class="px-3 py-4 text-right">12%</td><td class="px-3 py-4 text-right">229 ms</td><td class="px-3 py-4 text-right">0.06%</td><td class="px-3 py-4 text-zinc-600 dark:text-zinc-400">Observe</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <p id="table-status" class="mt-3 text-xs text-zinc-500" aria-live="polite">5 endpoints shown</p>
+        <div id="table-empty" class="panel state-panel component no-print" hidden><h3>No matching endpoints</h3><p class="small">Try a different name or reset the filter.</p><button id="reset-filter" class="button component" type="button">Reset filter</button></div>
+        <p id="table-status" class="status" role="status">3 endpoints shown</p>
       </section>
 
-      <section id="flow" class="mb-20" aria-labelledby="flow-title">
-        <div class="border-t border-zinc-200 pt-8 dark:border-zinc-800">
-          <p class="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-blue-700 dark:text-blue-400">04 · Operations</p>
-          <h2 id="flow-title" class="text-2xl font-semibold tracking-tight sm:text-3xl">The mitigation path is short</h2>
-          <p class="mt-3 max-w-2xl text-sm leading-6 text-zinc-600 dark:text-zinc-400">The proposed policy contains transient payment timeouts and sends persistent failures to a manual-review queue.</p>
-        </div>
-        <figure class="mt-8 border-y border-zinc-200 py-8 dark:border-zinc-800">
-          <div id="incident-diagram" class="mermaid" aria-label="Checkout incident mitigation flow diagram"></div>
-          <template id="diagram-source">
-flowchart LR
-  A[Checkout request] --> B{Payment call}
+      <section id="diagrams" aria-labelledby="diagrams-title">
+        <p class="eyebrow section-label">05 · Relationships and imagery</p><h2 id="diagrams-title">Diagrams have a prose equivalent</h2>
+        <p class="intro">Neutral nodes and a vertical flow work on narrow screens. An evidence image follows the same figure/caption pattern.</p>
+        <figure class="component"><div class="figure-box diagram-box diagram-render"><div id="incident-diagram" role="img" aria-label="Illustrative request handling flow"></div><p id="diagram-fallback" class="caption">Diagram unavailable or loading. The equivalent flow is described below.</p></div><p class="small diagram-description"><strong>Flow:</strong> A request reaches a payment call. Success confirms the order. A timeout queues manual review. This diagram is a presentation example, not a proposed production policy.</p><figcaption>The text description remains readable if Mermaid is unavailable and is used for printing.</figcaption></figure>
+        <template id="diagram-source">flowchart TB
+  A[Request] --> B{Payment call}
   B -->|Success| C[Confirm order]
-  B -->|Timeout| D[Bounded retry]
-  D -->|Recovered| C
-  D -->|Failed| E[Open circuit]
-  E --> F[Manual review queue]
-          </template>
-          <p id="diagram-fallback" class="hidden text-sm text-zinc-500">Diagram unavailable. Flow: checkout request → payment call → success confirms order; timeout triggers one bounded retry; persistent failure opens the circuit and queues manual review.</p>
-          <figcaption class="mt-5 text-xs text-zinc-500 dark:text-zinc-400">A single retry is permitted only for idempotent payment calls.</figcaption>
+  B -->|Timeout| D[Manual review]
+        </template>
+        <figure class="component">
+          <svg class="evidence-image" viewBox="0 0 680 160" role="img" aria-labelledby="image-title image-desc" xmlns="http://www.w3.org/2000/svg"><title id="image-title">Illustrative request-duration sample</title><desc id="image-desc">An example evidence figure, not an interface icon. Three labeled bars show parsing 10 milliseconds, querying 30 milliseconds, and serialization 20 milliseconds.</desc><g fill="var(--text)" font-family="system-ui, sans-serif" font-size="14"><text x="24" y="36">Parse: 10 ms</text><text x="24" y="80">Query: 30 ms</text><text x="24" y="124">Serialize: 20 ms</text></g><g fill="var(--accent)"><rect x="200" y="20" width="140" height="20" rx="4"/><rect x="200" y="64" width="420" height="20" rx="4"/><rect x="200" y="108" width="280" height="20" rx="4"/></g></svg>
+          <figcaption>Inline illustrative content image. Exact values: parse 10 ms, query 30 ms, serialize 20 ms. In a real report, use authorized evidence images with alt text and attribution.</figcaption>
         </figure>
       </section>
 
-      <section id="math" class="mb-20" aria-labelledby="math-title">
-        <div class="border-t border-zinc-200 pt-8 dark:border-zinc-800">
-          <p class="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-blue-700 dark:text-blue-400">05 · SLO</p>
-          <h2 id="math-title" class="text-2xl font-semibold tracking-tight sm:text-3xl">Error-budget accounting</h2>
-          <p class="mt-3 max-w-2xl text-sm leading-6 text-zinc-600 dark:text-zinc-400">For a 99.9% monthly availability objective, the allowed bad-request ratio is $1-SLO$. Budget consumption compares observed failures with that allowance.</p>
-        </div>
-        <div class="mt-7 rounded-lg border border-zinc-200 px-5 py-6 text-center dark:border-zinc-800">
-          $$\text{Budget used}=\frac{\text{failed requests}}{\text{total requests}\times(1-SLO)}\times100\%$$
-        </div>
-        <p class="mt-5 text-sm leading-6 text-zinc-600 dark:text-zinc-400">At the current burn rate, the service has 57% of its monthly budget remaining. Checkout remediation has the highest leverage because its failures dominate the numerator.</p>
+      <section id="math" aria-labelledby="math-title">
+        <p class="eyebrow section-label">06 · Quantitative definitions</p><h2 id="math-title">Inline and display mathematics</h2>
+        <p class="intro">Let \(L_1\) be the first measurement and \(L_4\) the last. The proportional reduction is \(r\); ordinary currency such as $100 is not treated as math.</p>
+        <div class="equation component">\[r = \frac{L_1-L_4}{L_1}\times100\%\]</div>
+        <div class="equation component">\[\begin{aligned}L_1-L_4 &= 236-184 = 52\text{ ms}\\r &= \frac{52}{236}\times100\% \approx 22.03\%\end{aligned}\]</div>
+        <dl class="component small"><dt>\(L_1\), \(L_4\)</dt><dd>Illustrative p95 latency in milliseconds at weeks 1 and 4.</dd><dt>\(r\)</dt><dd>Percentage reduction relative to the first value, not percentage points.</dd></dl>
+        <p class="small">Plain-language equivalent: subtract 184 from 236, divide the 52 ms difference by 236, then multiply by 100. The result is about 22.03%.</p>
+        <p id="math-fallback" class="caption">If math rendering is unavailable, the TeX expressions and their explanation remain visible.</p>
       </section>
 
-      <section id="code" class="mb-20" aria-labelledby="code-title">
-        <div class="border-t border-zinc-200 pt-8 dark:border-zinc-800">
-          <p class="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-blue-700 dark:text-blue-400">06 · Implementation</p>
-          <h2 id="code-title" class="text-2xl font-semibold tracking-tight sm:text-3xl">Bound retries by time and count</h2>
-          <p class="mt-3 max-w-2xl text-sm leading-6 text-zinc-600 dark:text-zinc-400">The retry must fit inside the request deadline and preserve the payment idempotency key.</p>
-        </div>
-        <div class="code-wrap mt-7 overflow-hidden rounded-lg border border-zinc-800 bg-[#0d0d0d]">
-          <div class="flex items-center justify-between border-b border-zinc-800 px-4 py-2 text-xs text-zinc-400"><span>Python</span><button id="copy-code" type="button" class="control-motion no-print rounded px-2 py-1 hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-blue-500">Copy</button></div>
-          <pre><code id="code-sample" class="language-python">async def charge_with_retry(payment, *, deadline_ms=800):
-    for attempt in range(2):
-        try:
-            return await gateway.charge(
-                payment,
-                idempotency_key=payment.order_id,
-                timeout_ms=deadline_ms // 2,
-            )
-        except GatewayTimeout:
-            if attempt == 1:
-                raise
-</code></pre>
-        </div>
+      <section id="code" aria-labelledby="code-title">
+        <p class="eyebrow section-label">07 · Reproducible calculation</p><h2 id="code-title">A labeled, copyable code block</h2>
+        <p class="intro">The sample calculates the percentage in the preceding section. It has no network or payment side effects.</p>
+        <div class="code-panel component"><div class="code-toolbar"><span>Python · reduction.py</span><button id="copy-code" class="button no-print" type="button">Copy</button></div><pre><code id="code-sample" class="language-python">def reduction_percent(first_ms, last_ms):
+    if first_ms &lt;= 0:
+        raise ValueError("first_ms must be positive")
+    return (first_ms - last_ms) / first_ms * 100
+
+result = reduction_percent(236, 184)
+print(f"{result:.2f}%")  # 22.03%
+</code></pre></div>
+        <p id="copy-status" class="status" role="status">Code can also be selected and copied manually.</p>
       </section>
 
-      <section id="method" class="mb-16" aria-labelledby="method-title">
-        <div class="border-t border-zinc-200 pt-8 dark:border-zinc-800">
-          <p class="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-blue-700 dark:text-blue-400">07 · Notes</p>
-          <h2 id="method-title" class="text-2xl font-semibold tracking-tight sm:text-3xl">Methodology and limits</h2>
-        </div>
-        <div class="mt-6 grid gap-3 text-sm">
-          <details data-animated-disclosure class="disclosure group rounded-lg border border-zinc-300 bg-transparent open:border-zinc-400 dark:border-zinc-700 dark:open:border-zinc-600">
-            <summary class="flex cursor-pointer list-none items-center justify-between gap-4 rounded-lg px-5 py-4 font-medium outline-none marker:hidden hover:bg-zinc-50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500 dark:hover:bg-zinc-900/60">
-              <span>Measurement window</span><span class="material-symbols-outlined disclosure-icon text-[20px] text-zinc-400" aria-hidden="true">add</span>
-            </summary>
-            <div class="disclosure-body"><p class="max-w-2xl px-5 pb-4 leading-6 text-zinc-600 dark:text-zinc-400">Illustrative production telemetry covering seven complete UTC weeks. Synthetic checks and client-cancelled requests are excluded.</p></div>
-          </details>
-          <details data-animated-disclosure class="disclosure group rounded-lg border border-zinc-300 bg-transparent open:border-zinc-400 dark:border-zinc-700 dark:open:border-zinc-600">
-            <summary class="flex cursor-pointer list-none items-center justify-between gap-4 rounded-lg px-5 py-4 font-medium outline-none marker:hidden hover:bg-zinc-50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500 dark:hover:bg-zinc-900/60">
-              <span>Percentile calculation</span><span class="material-symbols-outlined disclosure-icon text-[20px] text-zinc-400" aria-hidden="true">add</span>
-            </summary>
-            <div class="disclosure-body"><p class="max-w-2xl px-5 pb-4 leading-6 text-zinc-600 dark:text-zinc-400">Latency percentiles are calculated from successful server-side request duration and weighted by request count, not by endpoint.</p></div>
-          </details>
-          <details data-animated-disclosure class="disclosure group rounded-lg border border-zinc-300 bg-transparent open:border-zinc-400 dark:border-zinc-700 dark:open:border-zinc-600">
-            <summary class="flex cursor-pointer list-none items-center justify-between gap-4 rounded-lg px-5 py-4 font-medium outline-none marker:hidden hover:bg-zinc-50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500 dark:hover:bg-zinc-900/60">
-              <span>Important limitation</span><span class="material-symbols-outlined disclosure-icon text-[20px] text-zinc-400" aria-hidden="true">add</span>
-            </summary>
-            <div class="disclosure-body"><p class="max-w-2xl px-5 pb-4 leading-6 text-zinc-600 dark:text-zinc-400">All values in this example are fictional and exist only to demonstrate the report format.</p></div>
-          </details>
+      <section id="disclosures" aria-labelledby="disclosures-title">
+        <p class="eyebrow section-label">08 · Secondary detail</p><h2 id="disclosures-title">Expandable, but still native</h2>
+        <p class="intro">Use Enter or Space on a focused summary. Motion is optional; reading the detail never requires JavaScript.</p>
+        <div class="component">
+          <details class="disclosure" data-animated-disclosure><summary>Measurement limits <span class="icon" aria-hidden="true">add</span></summary><div class="disclosure-body"><div class="disclosure-content"><p>These invented observations demonstrate formatting only. They have no actual sampling window, production environment, or causal interpretation.</p></div></div></details>
+          <details class="disclosure" data-animated-disclosure open><summary>What stays visible <span class="icon" aria-hidden="true">add</span></summary><div class="disclosure-body"><div class="disclosure-content"><p>Essential conclusions stay outside closed sections. Exact chart tables remain reachable. Printing opens all report disclosures and restores their previous states afterward.</p></div></div></details>
         </div>
       </section>
 
-      <footer class="border-t border-zinc-200 pt-6 text-xs leading-5 text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
-        Example output for the <code class="font-mono">html-report-builder</code> skill. All data is illustrative.
-      </footer>
+      <section id="supporting" aria-labelledby="supporting-title">
+        <p class="eyebrow section-label">09 · Supporting content</p><h2 id="supporting-title">Cards, timelines, and action lists</h2>
+        <div class="panel component stack"><h3>A distinct evidence card</h3><p class="small">A card groups one related evidence item. It does not replace the flat report layout or create a dashboard.</p><span class="badge tone-info">Illustrative</span></div>
+        <h3 class="component">Illustrative observation timeline</h3>
+        <ol class="timeline small"><li><strong>Week 1</strong><p>The fictional p95 baseline is 236 ms.</p></li><li><strong>Week 4</strong><p>The fictional p95 observation is 184 ms.</p></li></ol>
+        <h3 class="component">Report-building checklist</h3><ol class="small"><li>Replace all illustrative evidence with authorized source content.</li><li>Omit components that do not help answer the report question.</li><li>Validate the remaining interactions, both themes, mobile, and print.</li></ol>
+      </section>
+
+      <section id="controls" aria-labelledby="controls-title">
+        <p class="eyebrow section-label">10 · Optional local interactions</p><h2 id="controls-title">Controls, feedback, and edge states</h2>
+        <p class="intro">This is a component demonstration. The form updates a local preview message only and never submits or fetches data. Real reports should omit these controls unless needed.</p>
+        <form id="demo-form" class="panel component no-print stack">
+          <div class="field-grid"><div><label for="demo-title">Preview label</label><input class="input" id="demo-title" value="Weekly latency" aria-describedby="demo-title-help"><p class="helper" id="demo-title-help">Used only in the demonstration status message.</p></div><div><label for="demo-unit">Unit</label><select class="input" id="demo-unit"><option>Milliseconds</option><option>Seconds</option></select></div></div>
+          <div><label for="demo-note">Reviewer note</label><textarea class="input" id="demo-note" placeholder="A local note for this preview"></textarea></div>
+          <div class="field-grid"><fieldset><legend>Preview detail</legend><label class="choice"><input type="radio" name="detail" value="Brief" checked>Brief</label><label class="choice"><input type="radio" name="detail" value="Full">Full</label></fieldset><div><span class="field-label">Optional display</span><label class="choice"><input id="demo-values" type="checkbox" checked>Include exact values</label></div></div>
+          <div class="field-grid"><div><label for="demo-error">Error-state example</label><input id="demo-error" class="input" value="Unknown" aria-invalid="true" aria-describedby="demo-error-help"><p id="demo-error-help" class="helper error-text">Demonstration error: use a known unit. This example is not validated on submission.</p></div><div><label for="demo-disabled">Disabled field example</label><input id="demo-disabled" class="input" value="Not editable" disabled></div></div>
+          <div class="controls"><button class="button primary" type="submit">Apply preview</button><button class="button" type="reset">Reset</button><button class="button tertiary" id="open-dialog" type="button">About this preview</button><button class="button" type="button" disabled>Unavailable</button><span class="tooltip-wrap"><button class="button" id="tooltip-trigger" type="button" aria-describedby="preview-tip">Preview help</button><span class="tooltip" role="tooltip" id="preview-tip">Only the local feedback message changes. No measurements are modified.</span></span></div>
+          <p class="status" id="form-status" role="status">No preview applied.</p>
+        </form>
+        <div class="panel component stack"><h3>Determinate progress example</h3><label for="demo-progress">Demonstration checklist: 3 of 4 items</label><progress id="demo-progress" value="3" max="4">75%</progress><p class="caption">75% complete, illustrative state only.</p></div>
+        <div class="panel state-panel component"><h3>Loading-state example</h3><label for="loading-progress">Loading, demonstration only</label><progress id="loading-progress">Loading</progress><p class="small">This static example is not fetching data.</p></div>
+        <div class="panel state-panel component"><h3>Empty-state example</h3><p class="small">No source measurements supplied. A real report should state this limitation rather than invent values.</p></div>
+        <div class="callout tone-danger component" role="note"><span class="icon" aria-hidden="true">error</span><p><strong>Error-state example:</strong> A source file could not be read. This demonstration is not a live failure.</p></div>
+      </section>
+
+      <section id="references" aria-labelledby="references-title">
+        <p class="eyebrow section-label">11 · Provenance</p><h2 id="references-title">References and output notes</h2>
+        <ol class="small"><li id="ref-1">Google Labs. <a href="https://github.com/google-labs-code/design.md/blob/main/docs/spec.md">DESIGN.md format specification</a>. The format reference, not a source for the fictional measurements. <a href="#cite-1" aria-label="Return to reference 1 citation">Return to citation</a>.</li></ol>
+        <p class="small">The page uses Tailwind, Chart.js, Mermaid, KaTeX, Highlight.js, and Google Material Symbols as optional CDN enhancements. The layout, written evidence, exact values, raw code, and native disclosures remain useful without them.</p>
+      </section>
+      <footer class="report-footer">Quiet Report component showcase for <code>html-report-builder</code>. All measurements are illustrative. No Google affiliation is claimed.</footer>
     </main>
-
-    <aside class="no-print hidden lg:block" aria-label="On this page">
-      <nav class="sticky top-24 text-sm">
-        <p class="mb-4 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">On this page</p>
-        <div id="section-nav" class="flex flex-col">
-          <a class="section-link active px-4 py-2" href="#summary">Executive summary</a>
-          <a class="section-link px-4 py-2" href="#trend">Latency trend</a>
-          <a class="section-link px-4 py-2" href="#endpoints">Endpoints</a>
-          <a class="section-link px-4 py-2" href="#flow">Incident flow</a>
-          <a class="section-link px-4 py-2" href="#math">Error budget</a>
-          <a class="section-link px-4 py-2" href="#code">Implementation</a>
-          <a class="section-link px-4 py-2" href="#method">Methodology</a>
-        </div>
-      </nav>
-    </aside>
+    <aside class="rail no-print"><nav aria-label="On this page"><p class="eyebrow">On this page</p>
+      <a class="section-link" href="#readout" aria-current="location">Readout and text</a><a class="section-link" href="#admonitions">Admonitions</a><a class="section-link" href="#charts">Charts</a><a class="section-link" href="#table">Tables</a><a class="section-link" href="#diagrams">Diagrams and images</a><a class="section-link" href="#math">Mathematics</a><a class="section-link" href="#code">Code</a><a class="section-link" href="#disclosures">Expandable sections</a><a class="section-link" href="#supporting">Supporting evidence</a><a class="section-link" href="#controls">Controls and states</a><a class="section-link" href="#references">References</a>
+    </nav></aside>
   </div>
-
-  <script type="module">
-    try {
-      const mermaid = (await import('https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs')).default;
-      window.renderReportDiagram = async () => {
-        const dark = document.documentElement.classList.contains('dark');
-        const node = document.getElementById('incident-diagram');
-        node.removeAttribute('data-processed');
-        node.textContent = document.getElementById('diagram-source').content.textContent.trim();
-        mermaid.initialize({ startOnLoad: false, theme: dark ? 'dark' : 'neutral', securityLevel: 'strict', fontFamily: 'Inter, system-ui, sans-serif' });
-        await mermaid.run({ nodes: [node] });
-      };
-      await window.renderReportDiagram();
-    } catch (error) {
-      document.getElementById('incident-diagram').classList.add('hidden');
-      document.getElementById('diagram-fallback').classList.remove('hidden');
-    }
-  </script>
-
+  <dialog id="preview-dialog" aria-labelledby="dialog-title"><h3 id="dialog-title">About this preview</h3><p class="small component">This native dialog is optional secondary detail. The executive conclusion and evidence remain in the report.</p><button class="button component" id="close-dialog" type="button" autofocus>Close</button></dialog>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const root = document.documentElement;
+      const motion = matchMedia('(prefers-reduced-motion: reduce)');
+      const systemTheme = matchMedia('(prefers-color-scheme: dark)');
       const themeButton = document.getElementById('theme-toggle');
-      const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-      let chart;
+      const charts = [];
+      const seriesTokens = ['accent','success','tip','warning','danger','muted'];
+      const linePatterns = [[],[6,4],[2,3],[8,3,2,3],[10,3],[1,4]];
+      const pointShapes = ['circle','rect','triangle','rectRot','cross','star'];
+      let themeTimer;
+      const color = name => getComputedStyle(root).getPropertyValue(`--${name}`).trim();
+      if (document.fonts) document.fonts.load('20px "Material Symbols Outlined"').then(fonts => {
+        if (fonts.length) root.classList.add('icons-ready');
+      }).catch(() => {});
 
-      themeButton.setAttribute('aria-pressed', String(root.classList.contains('dark')));
-
-      const chartColors = () => {
-        const dark = root.classList.contains('dark');
-        return { text: dark ? '#a1a1aa' : '#52525b', grid: dark ? '#27272a' : '#e4e4e7' };
-      };
-
-      const updateChartTheme = () => {
-        if (!chart) return;
-        const colors = chartColors();
-        chart.options.color = colors.text;
-        chart.options.scales.x.grid.color = colors.grid;
-        chart.options.scales.y.grid.color = colors.grid;
-        chart.options.scales.x.ticks.color = colors.text;
-        chart.options.scales.y.ticks.color = colors.text;
-        chart.update();
-      };
-
-      themeButton.addEventListener('click', async () => {
-        if (!reducedMotion.matches) {
-          document.body.classList.add('theme-transition');
-          void document.body.offsetWidth;
-        }
-        const dark = root.classList.toggle('dark');
-        root.style.colorScheme = dark ? 'dark' : 'light';
-        localStorage.setItem('report-theme', dark ? 'dark' : 'light');
-        themeButton.setAttribute('aria-pressed', String(dark));
-        updateChartTheme();
-        if (window.renderReportDiagram) await window.renderReportDiagram();
-        setTimeout(() => document.body.classList.remove('theme-transition'), 220);
+      function chartTheme(chart) {
+        chart.options.color = color('text');
+        chart.options.animation = motion.matches ? false : { duration:180 };
+        for (const axis of Object.values(chart.options.scales)) { axis.ticks.color = color('muted'); axis.grid.color = color('border'); axis.title.color = color('muted'); }
+        chart.data.datasets.forEach((dataset,index) => { dataset.borderColor = color(seriesTokens[index]); dataset.backgroundColor = dataset.borderColor; });
+        chart.update('none');
+      }
+      function setTheme(dark, animate = true) {
+        if (animate && !motion.matches) { document.body.classList.add('theme-transition'); clearTimeout(themeTimer); themeTimer = setTimeout(() => document.body.classList.remove('theme-transition'),180); }
+        root.classList.toggle('dark',dark); root.style.colorScheme = dark ? 'dark' : 'light';
+        themeButton.setAttribute('aria-pressed',String(dark));
+        charts.forEach(chartTheme);
+        if (window.renderReportDiagram) window.renderReportDiagram();
+      }
+      themeButton.setAttribute('aria-pressed',String(root.classList.contains('dark')));
+      themeButton.addEventListener('click', () => {
+        window.reportThemeExplicit = true;
+        const dark = !root.classList.contains('dark');
+        try { localStorage.setItem('report-theme',dark ? 'dark' : 'light'); } catch {}
+        setTheme(dark);
       });
+      systemTheme.addEventListener('change',event => { if (!window.reportThemeExplicit) setTheme(event.matches); });
+      motion.addEventListener('change',() => charts.forEach(chartTheme));
 
       document.querySelectorAll('[data-animated-disclosure]').forEach(details => {
         const summary = details.querySelector(':scope > summary');
         const body = details.querySelector(':scope > .disclosure-body');
-        let animation = null;
-        if (!summary || !body) return;
-
-        summary.addEventListener('click', event => {
-          if (reducedMotion.matches) return;
+        let animation, desired = details.open;
+        summary.addEventListener('click',event => {
+          if (motion.matches || !body.animate) return;
           event.preventDefault();
-          if (animation) return;
-
-          const opening = !details.open;
-          if (opening) details.open = true;
-          const fullHeight = body.scrollHeight;
-          animation = body.animate(
-            opening
-              ? [{ height: '0px', opacity: 0, transform: 'translateY(-4px)' }, { height: `${fullHeight}px`, opacity: 1, transform: 'translateY(0)' }]
-              : [{ height: `${fullHeight}px`, opacity: 1, transform: 'translateY(0)' }, { height: '0px', opacity: 0, transform: 'translateY(-4px)' }],
-            { duration: 190, easing: 'cubic-bezier(.2,.8,.2,1)' }
-          );
-          animation.onfinish = () => {
-            if (!opening) details.open = false;
-            animation = null;
-          };
-          animation.oncancel = () => { animation = null; };
+          const startHeight = details.open ? body.getBoundingClientRect().height : 0;
+          desired = animation ? !desired : !details.open;
+          if (animation) animation.cancel();
+          if (desired) details.open = true;
+          const current = body.animate([{ height:`${startHeight}px`,opacity:desired ? 0 : 1 },{ height:desired ? `${body.scrollHeight}px` : '0px',opacity:desired ? 1 : 0 }],{ duration:180,easing:'ease-out' });
+          animation = current;
+          current.onfinish = () => { if (animation === current) { details.open = desired; animation = null; } };
+          current.oncancel = () => { if (animation === current) animation = null; };
         });
+        details.addEventListener('toggle',() => { if (!animation) desired = details.open; });
       });
 
-      if (window.Chart) {
-        const colors = chartColors();
-        chart = new Chart(document.getElementById('latency-chart'), {
-          type: 'line',
-          data: {
-            labels: ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7'],
-            datasets: [
-              { label: 'p95 latency', data: [236, 228, 214, 203, 196, 189, 184], borderColor: '#2563eb', backgroundColor: '#2563eb18', borderWidth: 2, pointRadius: 3, tension: .32, fill: true },
-              { label: 'p50 latency', data: [82, 80, 76, 71, 68, 66, 64], borderColor: '#a1a1aa', backgroundColor: 'transparent', borderWidth: 1.5, pointRadius: 2, tension: .32 }
-            ]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            color: colors.text,
-            interaction: { intersect: false, mode: 'index' },
-            plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, padding: 24 } }, tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.parsed.y} ms` } } },
-            scales: {
-              x: { grid: { color: colors.grid }, border: { display: false }, ticks: { color: colors.text } },
-              y: { beginAtZero: false, suggestedMin: 0, grid: { color: colors.grid }, border: { display: false }, ticks: { color: colors.text, callback: v => `${v} ms` } }
-            }
-          }
-        });
-      } else {
-        document.getElementById('latency-chart').classList.add('hidden');
-        document.getElementById('chart-fallback').classList.remove('hidden');
-      }
-
-      if (window.renderMathInElement) {
-        renderMathInElement(document.body, { delimiters: [{ left: '$$', right: '$$', display: true }, { left: '$', right: '$', display: false }], throwOnError: false });
-      }
-      if (window.hljs) hljs.highlightAll();
-
-      document.getElementById('copy-code').addEventListener('click', async (event) => {
-        const button = event.currentTarget;
+      function makeChart(id,type,labels,datasets,unit) {
+        if (!document.getElementById(id)) return;
+        const fallback = document.getElementById(id === 'latency-chart' ? 'line-fallback' : 'bar-fallback');
         try {
-          await navigator.clipboard.writeText(document.getElementById('code-sample').innerText);
-          button.textContent = 'Copied';
-        } catch {
-          button.textContent = 'Select to copy';
+          if (!window.Chart) throw new Error('Chart library unavailable');
+          const bars = type === 'bar';
+          const chart = new Chart(document.getElementById(id), {
+            type,
+            data:{ labels,datasets:datasets.map((dataset,index) => ({ ...dataset,borderColor:color(seriesTokens[index]),backgroundColor:color(seriesTokens[index]),borderWidth:bars ? 0 : 2,borderRadius:bars ? 4 : 0,pointRadius:3,pointStyle:pointShapes[index],borderDash:linePatterns[index],tension:0,fill:false })) },
+            options:{ responsive:true,maintainAspectRatio:false,indexAxis:bars ? 'y' : 'x',color:color('text'),font:{ family:'system-ui',size:12 },animation:motion.matches ? false : { duration:180 },interaction:{ intersect:false,mode:'index' },
+              plugins:{ legend:{ display:datasets.length > 1,position:'bottom',labels:{ usePointStyle:true,font:{ family:'system-ui',size:12 } } },tooltip:{ backgroundColor:'#0d0d0d',titleColor:'#f4f4f5',bodyColor:'#f4f4f5',titleFont:{ family:'system-ui',size:12 },bodyFont:{ family:'system-ui',size:12 },callbacks:{ label:context => `${context.dataset.label}: ${bars ? context.parsed.x : context.parsed.y} ${unit}` } } },
+              scales:{ x:{ beginAtZero:true,grid:{ color:color('border'),lineWidth:1 },border:{ display:false },ticks:{ color:color('muted'),font:{ family:'system-ui',size:12 } },title:{ display:true,text:bars ? `Latency (${unit})` : 'Week',color:color('muted') } },y:{ beginAtZero:true,grid:{ color:color('border'),lineWidth:1 },border:{ display:false },ticks:{ color:color('muted'),font:{ family:'system-ui',size:12 } },title:{ display:!bars,text:`Latency (${unit})`,color:color('muted') } } }
+            }
+          });
+          charts.push(chart); fallback.hidden = true;
+        } catch { document.getElementById(id).hidden = true; }
+      }
+      makeChart('latency-chart','line',['1','2','3','4'],[{ label:'p95',data:[236,228,203,184] },{ label:'p50',data:[82,80,71,64] }],'ms');
+      makeChart('endpoint-chart','bar',['Search','Catalog','Checkout'],[{ label:'p95',data:[142,171,412] }],'ms');
+      try {
+        if (window.renderMathInElement) {
+          renderMathInElement(document.getElementById('report'),{ delimiters:[{ left:'\\[',right:'\\]',display:true },{ left:'\\(',right:'\\)',display:false }],output:'htmlAndMathml',trust:false,throwOnError:false });
+          const mathFallback = document.getElementById('math-fallback');
+          if (mathFallback) mathFallback.hidden = true;
         }
-        setTimeout(() => { button.textContent = 'Copy'; }, 1400);
+      } catch {}
+      try { if (window.hljs) hljs.highlightAll(); } catch {}
+      document.getElementById('copy-code')?.addEventListener('click',async () => {
+        const button = document.getElementById('copy-code');
+        try { await navigator.clipboard.writeText(document.getElementById('code-sample').textContent); button.textContent = 'Copied'; document.getElementById('copy-status').textContent = 'Copied code to clipboard.'; }
+        catch { document.getElementById('copy-status').textContent = 'Copy unavailable. Select the code to copy.'; }
+        setTimeout(() => { button.textContent = 'Copy'; },1400);
       });
 
-      const navLinks = [...document.querySelectorAll('#section-nav a')];
-      const sections = navLinks.map(link => document.querySelector(link.hash)).filter(Boolean);
-      const observer = new IntersectionObserver(entries => {
-        const visible = entries.filter(entry => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-        if (!visible) return;
-        navLinks.forEach(link => {
-          const active = link.hash === `#${visible.target.id}`;
-          link.classList.toggle('active', active);
-          link.setAttribute('aria-current', active ? 'location' : 'false');
-        });
-      }, { rootMargin: '-15% 0px -65% 0px', threshold: [0, .2, .6] });
-      sections.forEach(section => observer.observe(section));
+      const navLinks = [...document.querySelectorAll('.section-link')];
+      const sections = [...document.querySelectorAll('main > section')];
+      function activate(id) { navLinks.forEach(link => { if (link.hash === `#${id}`) link.setAttribute('aria-current','location'); else link.removeAttribute('aria-current'); }); }
+      navLinks.forEach(link => link.addEventListener('click',() => activate(link.hash.slice(1))));
+      function syncNav() {
+        if (!sections.length) return;
+        if (scrollY + innerHeight >= document.documentElement.scrollHeight - 2) { activate(sections.at(-1).id); return; }
+        const passed = sections.filter(section => section.getBoundingClientRect().top <= innerHeight * .35);
+        activate((passed.at(-1) || sections[0]).id);
+      }
+      if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver(syncNav,{ rootMargin:'-35% 0px -64% 0px',threshold:0 });
+        sections.forEach(section => observer.observe(section));
+      }
+      window.addEventListener('scroll',syncNav,{ passive:true });
+      syncNav();
 
       const table = document.getElementById('endpoint-table');
-      const tbody = table.tBodies[0];
-      const status = document.getElementById('table-status');
-      table.querySelectorAll('thead button[data-sort]').forEach(button => {
-        let ascending = true;
-        button.addEventListener('click', () => {
-          const column = Number(button.dataset.sort);
-          const numeric = button.hasAttribute('data-numeric');
-          [...tbody.rows].sort((a, b) => {
-            const left = a.cells[column].textContent.trim();
-            const right = b.cells[column].textContent.trim();
-            const result = numeric
-              ? parseFloat(left.replace(/[^0-9.-]/g, '')) - parseFloat(right.replace(/[^0-9.-]/g, ''))
-              : left.localeCompare(right);
-            return ascending ? result : -result;
-          }).forEach(row => tbody.appendChild(row));
-          ascending = !ascending;
-        });
-      });
+      const tbody = table?.tBodies[0];
+      const tableStatus = document.getElementById('table-status');
+      const filter = document.getElementById('table-filter');
+      if (table && tbody && tableStatus && filter) {
+      table.querySelectorAll('[data-sort]').forEach(button => button.addEventListener('click',() => {
+        const ascending = button.closest('th').getAttribute('aria-sort') !== 'ascending';
+        const column = Number(button.dataset.sort);
+        [...tbody.rows].sort((a,b) => {
+          const left = a.cells[column].textContent.trim(), right = b.cells[column].textContent.trim();
+          const comparison = button.hasAttribute('data-numeric') ? Number(left) - Number(right) : left.localeCompare(right);
+          return ascending ? comparison : -comparison;
+        }).forEach(row => tbody.appendChild(row));
+        table.querySelectorAll('thead th').forEach(th => th.removeAttribute('aria-sort'));
+        button.closest('th').setAttribute('aria-sort',ascending ? 'ascending' : 'descending');
+        tableStatus.textContent = `Sorted by ${button.childNodes[0].textContent.trim()}, ${ascending ? 'ascending' : 'descending'}.`;
+      }));
+      function filterRows() {
+        const query = filter.value.trim().toLowerCase();
+        let count = 0;
+        [...tbody.rows].forEach(row => { row.hidden = !row.textContent.toLowerCase().includes(query); if (!row.hidden) count++; });
+        document.getElementById('table-empty').hidden = count !== 0;
+        tableStatus.textContent = `${count} endpoint${count === 1 ? '' : 's'} shown`;
+      }
+      filter.addEventListener('input',filterRows);
+      document.getElementById('reset-filter').addEventListener('click',() => { filter.value = ''; filterRows(); filter.focus(); });
+      }
 
-      document.getElementById('table-filter').addEventListener('input', event => {
-        const query = event.target.value.trim().toLowerCase();
-        let shown = 0;
-        [...tbody.rows].forEach(row => {
-          const matches = row.textContent.toLowerCase().includes(query);
-          row.hidden = !matches;
-          if (matches) shown += 1;
-        });
-        status.textContent = `${shown} endpoint${shown === 1 ? '' : 's'} shown`;
+      const form = document.getElementById('demo-form');
+      form?.addEventListener('submit',event => { event.preventDefault(); document.getElementById('form-status').textContent = `Preview applied: ${document.getElementById('demo-title').value || 'Untitled'}, ${document.getElementById('demo-unit').value.toLowerCase()}, ${new FormData(form).get('detail').toLowerCase()} detail.`; });
+      form?.addEventListener('reset',() => { document.getElementById('form-status').textContent = 'Preview reset.'; });
+      const dialog = document.getElementById('preview-dialog');
+      const dialogOpener = document.getElementById('open-dialog');
+      dialogOpener?.addEventListener('click',() => dialog.showModal());
+      document.getElementById('close-dialog')?.addEventListener('click',() => dialog.close());
+      dialog?.addEventListener('close',() => dialogOpener?.focus());
+      const tooltip = document.querySelector('.tooltip-wrap');
+      tooltip?.addEventListener('keydown',event => { if (event.key === 'Escape') tooltip.setAttribute('data-dismissed',''); });
+      tooltip?.addEventListener('mouseleave',() => tooltip.removeAttribute('data-dismissed'));
+      tooltip?.addEventListener('focusout',() => tooltip.removeAttribute('data-dismissed'));
+
+      let printState;
+      window.addEventListener('beforeprint',() => {
+        if (printState) return;
+        printState = { disclosures:[...document.querySelectorAll('main details')].map(details => [details,details.open]),rows:[...(tbody?.rows || [])].map(row => [row,row.hidden]) };
+        document.getAnimations().forEach(animation => animation.finish());
+        printState.disclosures.forEach(([details]) => { details.open = true; });
+        printState.rows.forEach(([row]) => { row.hidden = false; });
       });
+      window.addEventListener('afterprint',() => {
+        if (!printState) return;
+        printState.disclosures.forEach(([details,open]) => { details.open = open; });
+        printState.rows.forEach(([row,hidden]) => { row.hidden = hidden; });
+        printState = null;
+      });
+      document.getElementById('print-report').addEventListener('click',() => window.print());
     });
+  </script>
+  <script type="module">
+    let queue = Promise.resolve();
+    try {
+      const mermaid = (await import('https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs')).default;
+      window.renderReportDiagram = () => {
+        queue = queue.then(async () => {
+          const style = getComputedStyle(document.documentElement);
+          const color = name => style.getPropertyValue(`--${name}`).trim();
+          const node = document.getElementById('incident-diagram');
+          const fallback = document.getElementById('diagram-fallback');
+          if (!node || !document.getElementById('diagram-source')) return;
+          try {
+            mermaid.initialize({ startOnLoad:false,securityLevel:'strict',theme:'base',fontFamily:'system-ui',themeVariables:{ fontSize:'14px',primaryColor:color('surface'),primaryTextColor:color('text'),primaryBorderColor:color('border'),secondaryColor:color('surface'),secondaryTextColor:color('text'),secondaryBorderColor:color('border'),tertiaryColor:color('surface'),tertiaryTextColor:color('text'),tertiaryBorderColor:color('border'),lineColor:color('muted'),edgeLabelBackground:color('page') } });
+            node.removeAttribute('data-processed');
+            node.textContent = document.getElementById('diagram-source').content.textContent.trim();
+            await mermaid.run({ nodes:[node] });
+            node.hidden = false; fallback.hidden = true;
+          } catch { node.hidden = true; fallback.hidden = false; }
+        }).catch(() => {});
+        return queue;
+      };
+      await window.renderReportDiagram();
+    } catch { const node = document.getElementById('incident-diagram'); if (node) node.hidden = true; }
   </script>
 </body>
 </html>
