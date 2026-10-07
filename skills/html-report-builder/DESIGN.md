@@ -1,7 +1,7 @@
 ---
 version: alpha
 name: Northstar Report
-description: The original Northstar API report design, expressed in Google's DESIGN.md format without changing its visual identity or layout.
+description: A developer-documentation report with OpenAI API reference-inspired controls and a coherent Northstar reliability-review example, expressed in Google's DESIGN.md format.
 colors:
   primary: "#09090b"
   secondary: "#3f3f46"
@@ -21,7 +21,24 @@ colors:
   warning-border: "#fcd34d"
   danger: "#b91c1c"
   danger-border: "#fca5a5"
-  focus: "#3b82f6"
+  focus: "#52525b"
+  dark-focus: "#a1a1aa"
+  control-text: "#3f3f46"
+  dark-control-text: "#d4d4d8"
+  control-hover: "#f4f4f5"
+  dark-control-hover: "#27272a"
+  control-pressed: "#e4e4e7"
+  dark-control-pressed: "#3f3f46"
+  action-fill: "#18181b"
+  action-text: "#fafafa"
+  action-hover: "#3f3f46"
+  dark-action-fill: "#f4f4f5"
+  dark-action-text: "#18181b"
+  dark-action-hover: "#d4d4d8"
+  progress-track: "#e4e4e7"
+  progress-fill: "#52525b"
+  dark-progress-track: "#27272a"
+  dark-progress-fill: "#a1a1aa"
   dark-primary: "#f4f4f5"
   dark-secondary: "#d4d4d8"
   dark-tertiary: "#60a5fa"
@@ -58,12 +75,14 @@ typography:
   nav: { fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif', fontSize: 14px, fontWeight: 400, lineHeight: 20px }
   caption: { fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif', fontSize: 12px, fontWeight: 400, lineHeight: 20px }
   label: { fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif', fontSize: 12px, fontWeight: 600, lineHeight: 16px, letterSpacing: 0.14em }
-  control: { fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif', fontSize: 12px, fontWeight: 500, lineHeight: 16px }
+  control: { fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif', fontSize: 13px, fontWeight: 500, lineHeight: 18px }
   metric: { fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif', fontSize: 24px, fontWeight: 600, lineHeight: 32px, fontFeature: '"tnum"' }
   code: { fontFamily: 'SFMono-Regular, "Cascadia Code", "Roboto Mono", ui-monospace, monospace', fontSize: 16px, fontWeight: 400, lineHeight: 24px }
 rounded:
   none: 0px
-  copy: 4px
+  copy: 6px
+  control: 6px
+  progress: 2px
   input: 6px
   container: 8px
   callout: 12px
@@ -98,10 +117,14 @@ components:
   description-dark: { backgroundColor: "{colors.dark-neutral}", textColor: "{colors.dark-description}" }
   section-label: { backgroundColor: "{colors.neutral}", textColor: "{colors.tertiary}" }
   section-label-dark: { backgroundColor: "{colors.dark-neutral}", textColor: "{colors.dark-tertiary}" }
-  toolbar-button: { backgroundColor: "{colors.neutral}", textColor: "{colors.primary}", typography: "{typography.control}", rounded: "{rounded.pill}", height: 36px }
-  toolbar-button-dark: { backgroundColor: "{colors.dark-neutral}", textColor: "{colors.dark-primary}" }
-  toolbar-button-hover: { backgroundColor: "{colors.hover}" }
-  toolbar-button-dark-hover: { backgroundColor: "{colors.dark-hover}" }
+  toolbar-button: { backgroundColor: "{colors.neutral}", textColor: "{colors.control-text}", typography: "{typography.control}", rounded: "{rounded.control}", height: 32px }
+  toolbar-button-dark: { backgroundColor: "{colors.dark-neutral}", textColor: "{colors.dark-control-text}" }
+  toolbar-button-hover: { backgroundColor: "{colors.control-hover}" }
+  toolbar-button-dark-hover: { backgroundColor: "{colors.dark-control-hover}" }
+  primary-button: { backgroundColor: "{colors.action-fill}", textColor: "{colors.action-text}", typography: "{typography.control}", rounded: "{rounded.control}" }
+  primary-button-dark: { backgroundColor: "{colors.dark-action-fill}", textColor: "{colors.dark-action-text}" }
+  progress: { backgroundColor: "{colors.progress-track}", textColor: "{colors.progress-fill}", rounded: "{rounded.progress}", height: 4px }
+  progress-dark: { backgroundColor: "{colors.dark-progress-track}", textColor: "{colors.dark-progress-fill}" }
   input: { backgroundColor: "{colors.neutral}", textColor: "{colors.description}", rounded: "{rounded.input}", typography: "{typography.small}" }
   input-dark: { backgroundColor: "{colors.dark-neutral}", textColor: "{colors.dark-description}" }
   callout: { backgroundColor: "{colors.neutral}", textColor: "{colors.callout-text}", rounded: "{rounded.callout}", typography: "{typography.small}" }
@@ -129,6 +152,7 @@ components:
   danger-outline: { backgroundColor: "{colors.danger-border}" }
   danger-outline-dark: { backgroundColor: "{colors.dark-danger-border}" }
   focus: { backgroundColor: "{colors.focus}" }
+  focus-dark: { backgroundColor: "{colors.dark-focus}" }
   code-outline: { backgroundColor: "{colors.code-border}" }
   chart-line: { backgroundColor: "{colors.chart-primary}" }
   chart-fill: { backgroundColor: "{colors.chart-primary-fill}" }
@@ -139,14 +163,14 @@ components:
 
 ## Overview
 
-- **Source of truth:** The original Northstar API report in [assets/example-report.html](assets/example-report.html).
+- **Source of truth:** The current Northstar API report in [assets/example-report.html](assets/example-report.html).
 - **Format:** [Google Labs' DESIGN.md specification](https://github.com/google-labs-code/design.md/blob/main/docs/spec.md), alpha.
-- **Purpose:** Express the existing design, not redesign it or adopt Google's visual identity.
+- **Purpose:** Preserve the report's reading layout while aligning its controls with the [OpenAI API reference](https://developers.openai.com/api/reference/overview). The reference supplies a visual direction, not brand identity or a site shell.
 - **Identity:** Developer-documentation report; white/black page, zinc neutrals, restrained blue, thin horizontal rules, generous whitespace.
 - **Agent decisions:** Content, section names, and useful evidence-backed components only.
-- **Preserve:** Original typography, fixed top-right utilities, flat KPI strip, two-column executive prose, right rail, chart styling, and horizontal diagram.
+- **Preserve:** Typography, fixed top-right utilities, flat KPI strip, two-column executive prose, right rail, chart styling, and horizontal diagram. Controls use compact neutral treatments with consistent corners and quiet state changes.
 - **Implementation:** Reuse the example's Tailwind classes and small behavior-specific CSS. Tokens name existing values; they do not require replacing utilities with a new component framework.
-- **Extensions:** Additional component examples live in a closed Methodology disclosure, not a replacement showcase page.
+- **Example:** One fictional reliability review. Components carry the analysis: chart values beside the chart, endpoint filters beside the table, a readiness checklist beside the release gate, and a working budget calculator beside the equation. Do not add a component catalog or demonstration appendix.
 - **Precedence:** Explicit user design overrides take priority; otherwise follow this contract.
 - **Runtime:** Embed authorized source data; never fetch this document or private data from the report.
 
@@ -167,7 +191,10 @@ components:
 | Hover | `hover`, zinc-50 | `dark-hover`, zinc-900; disclosure hover at 60% opacity |
 | Callout body | `callout-text`, zinc-800 | `dark-callout-text`, zinc-200 |
 | Status: success / warning / danger | Emerald-700 / amber-700 / red-700 | Emerald-400 / amber-400 / red-400 |
-| Focus | Blue-500 | Blue-500 |
+| Focus | `focus`, zinc-600 | `dark-focus`, zinc-400 |
+| Primary actions | Zinc-900 fill, zinc-50 text | Zinc-100 fill, zinc-900 text |
+| Control hover / press | Zinc-100 / zinc-200 | Zinc-800 / zinc-700 |
+| Progress track / fill | Zinc-200 / zinc-600 | Zinc-800 / zinc-400 |
 | Code | Fixed #0d0d0d surface; zinc-100 text; zinc-400 toolbar; zinc-800 outline | Same |
 
 - Charts retain blue-600 as the primary series and zinc-400 as the comparison series in both themes.
@@ -192,14 +219,15 @@ components:
 | Section eyebrow | 12px / 16px | Same | Uppercase; weight 600; tracking .14em |
 | Header metadata | 12px / 16px | Same | Weight 500; uppercase; tracking .16em |
 | KPI values | 24px / 32px | Same | Weight 600; tabular numerals |
-| Utility buttons | 12px / 16px | Same | Weight 500 |
+| Utility buttons / report actions | 13px / 18px | Same | Weight 500 |
+| Code copy / table sort controls | 12px / 18px | Same | Weight 500 |
 | Code block | 16px / 24px | Same | Original monospace stack |
 
 - Sans stack: `Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif`.
 - Preserve the Inter-first fallback stack; do not add a font download or replace it with a new family.
 - Mono stack: `SFMono-Regular, Cascadia Code, Roboto Mono, ui-monospace, monospace`.
 - Inline endpoint identifiers use 12px monospace; code blocks use the original larger type.
-- One H1; H2 for report sections; bold compact subheadings inside secondary component examples.
+- One H1; H2 for report sections; H3 for evidence, planning, and remediation subsections.
 - KaTeX uses its supplied math fonts.
 
 | Supporting text | Pattern |
@@ -215,7 +243,7 @@ components:
 
 - Never invent quotations, attribution, or citations.
 - UI icons use Google Material Symbols Outlined, weight 400, optical size 20, fill 0.
-- Standard icons are 20px; the original toolbar contrast icon is 16px.
+- Standard content/disclosure icons are 20px; button icons are 18px; table-sort icons are 16px.
 - Load only named icons; give icon controls accessible names; hide decorative icons from assistive technology.
 - Do not draw custom SVG/Unicode UI icons; content SVGs remain allowed.
 
@@ -235,7 +263,7 @@ components:
 
 | Element | Original geometry |
 | --- | --- |
-| Utilities | Fixed top-right, 16px from edges; 8px gap; z-index 50 |
+| Utilities | Fixed top-right, 16px from edges; 4px gap; 4px group padding; solid page fill; z-index 50 |
 | Header | 1px bottom rule; 48px bottom padding; 64px following space |
 | Header order | Metadata/status → H1 → lead → KPI strip |
 | Metadata → H1 | 24px |
@@ -266,23 +294,24 @@ components:
 | Element | Treatment |
 | --- | --- |
 | Report sections / metrics / figures / tables | Flat, thin rules, no shadow |
-| Original fixed utility buttons | `shadow-sm`; page-colored 90% fill; backdrop blur |
+| Fixed utility buttons | Ghost controls on solid page fill; no shadow, translucency, or blur |
 | Callouts / disclosures | Full outline; no shadow |
 | Optional tooltip | Code-colored surface; no decorative shadow |
 | Native dialog | Page surface; neutral outline; backdrop `rgb(0 0 0 / .48)` |
 
-- Preserve the toolbar's subtle translucency/blur; do not extend it to reading surfaces.
+- Keep utilities visually quiet: solid page fill and neutral hover, without elevation or backdrop effects.
 - No gradients, floating evidence cards, decorative layers, or marketing chrome.
 
 ## Shapes
 
 | Element | Radius |
 | --- | --- |
-| Fixed utility buttons / status badges | Pill |
-| Filter inputs / optional local buttons | 6px |
+| Utility / primary / secondary / ghost buttons / inputs | 6px |
+| Status badges | Pill |
+| Progress track / fill | 2px |
 | Code / equation / disclosure containers | 8px |
 | Callouts | 12px |
-| Copy button | 4px |
+| Copy button | 6px |
 | KPI strip / chart and table rules | None |
 
 ## Components
@@ -299,36 +328,44 @@ components:
 | Mobile contents | Native outlined disclosure; same report links |
 | Theme setup | Head script before paint; `.dark`; `color-scheme`; stored `report-theme`, otherwise system preference |
 | Preview override | `?theme=light` / `?theme=dark`; do not persist until user toggles |
-| Toggle | Original compact Theme button; accessible name; `aria-pressed` reflects dark mode |
+| Toggle | Compact ghost Theme button; accessible name; `aria-pressed` reflects dark mode |
 | Storage failure | Catch errors; toggle still works in memory |
 | Rich content | Recolor Chart.js; rerender Mermaid from preserved source; serialize renders |
 
 ### Buttons, forms, tooltips, and feedback
 
+Use the same geometry and neutral state language throughout the report. The API reference's compact document actions and ghost copy controls are the visual anchor; the report keeps its own layout and fonts.
+
 | Control | Pattern |
 | --- | --- |
-| Theme / Print | 36px tall; pill; 12px horizontal padding; 12px text; 1px neutral outline |
+| Shared button | `.report-button`; minimum height 32px; 6px vertical / 10px horizontal padding; 6px radius; 13px/18px medium label; 6px icon gap |
+| Theme / Print | Ghost variant; transparent border/fill; 18px Material Symbol; solid page-colored utility group |
 | Theme label | Hidden below 640px; accessible name stays available |
-| Copy | Original compact 4px radius; 8px horizontal / 4px vertical padding |
-| Filter | Transparent fill; 1px zinc-300/700 outline; 6px radius; 12px horizontal / 8px vertical padding; 14px text; max-width 384px |
-| Local primary action | Blue-600 fill; white label; compact 6px-radius geometry; only when content requires it |
-| Local secondary action | Neutral outline; transparent fill; same compact geometry |
-| Focus | Blue-500 ring, 2px; inset for summary rows |
-| Press | Scale .97; no bounce |
-| Disabled | Native `disabled`; opacity .5; no hover/press motion |
-| Textarea / select | Same filter border/type/radius; textarea vertically resizable |
+| Primary action | Near-black fill / off-white label in light; off-white fill / near-black label in dark; same neutral border; darker/lighter neutral hover |
+| Secondary action | 1px neutral outline; transparent fill; neutral hover |
+| Ghost action | Transparent border and fill; neutral hover; use for utilities and secondary contextual information |
+| Copy | Ghost variant on fixed code palette; minimum height 28px; 4px vertical / 8px horizontal padding; 12px type; 6px radius; icon plus Copy/Copied label |
+| Sort | Ghost variant; minimum height 28px; 4px vertical / 6px horizontal padding; 12px type; 16px trailing sort icon |
+| Focus | 2px neutral outline with 3px offset; inset neutral ring for summary rows; visible in both themes |
+| Press | Neutral fill change; primary opacity .88; no scale, translate, bounce, or geometry change |
+| Disabled | Native `disabled`; opacity .45; default cursor; no hover/press change |
+| Input / search / number / textarea | Minimum height 36px; 1px zinc-300/700 outline; 6px radius; 12px horizontal / 8px vertical padding; 14px/20px type; transparent fill |
+| Select | Same input pattern, intrinsic width, 28px right padding for native arrow; explicitly themed option surfaces |
+| Textarea | Full width; vertically resizable |
+| Input hover / focus | Neutral zinc-600/400 border; shared focus outline, no blue halo |
 | Labels / helpers | Visible; 8px label gap; 12px helpers; `aria-describedby` where applicable |
-| Validation | Red outline; explicit message; `aria-invalid="true"` |
-| Checkbox / radio | Native controls; wrapped 44px label targets; labeled radio fieldset |
-| Tooltip | Code palette; 12px/20px; max-width 240px; 8px padding; 6px radius |
+| Validation | Red outline; explicit message; `aria-invalid="true"`; clear the error after correction |
+| Checkbox / radio | Native controls with monochrome accent; 16px visible control; 44px wrapped label target; pointer cursor on both control and label; labeled fieldsets |
+| Tooltip | Near-black surface; off-white text; 12px/20px; width 220px; 10px horizontal / 8px vertical padding; 6px radius |
 
-- Tooltips open on hover and focus, use `aria-describedby`, and close with Escape.
-- Keep essential information out of tooltips and dialogs.
-- Use persistent `role="status"` / polite announcements for copy, sort, filter, and local preview feedback.
-- Copy success: **Copied**; failure: **Copy unavailable. Select the code to copy.**
-- Placeholders are examples, not labels.
-- Forms are optional report-local interactions; no fabricated submission flows.
-- Preserve original compact visible controls; do not impose a new 44px button design globally.
+- Reuse the example's `.report-button`, variant classes, `.report-input`, and `.report-check` rules. Custom CSS establishes shared native-control appearance; Tailwind continues to own layout and surrounding content.
+- Reserve the primary variant for a concrete report-local action, such as downloading review notes or recalculating a scenario. Blue remains a data/link accent.
+- Tooltips open on hover and focus, use `aria-describedby`, and close with Escape. Keep essential information outside tooltips and dialogs.
+- Keep persistent `role="status"` / polite announcements for copy, sort, filtering, readiness, downloads, and calculations.
+- Copy success: **Copied**; failure: **Copy unavailable. Select the code to copy.** Preserve the copy icon when changing the label.
+- Forms must update actual report-local content. Define validation, reset behavior, and units. Do not include an inert preview form or invented submission flow.
+- Download controls must export the current visible review/checklist, including entered notes. Do not send those notes to a service without authorization.
+- Placeholders are examples, not labels. Maintain compact desktop geometry and 44px targets for disclosure and checkbox rows.
 
 ### Tables and badges
 
@@ -341,7 +378,7 @@ components:
 | Rows | 1px zinc-200/800 dividers |
 | Alignment | Labels left; numeric values right |
 | Endpoint IDs | 12px monospace |
-| Sort | Native header buttons; `aria-sort` on active header; polite column/direction feedback |
+| Sort | Shared ghost sort button; `swap_vert` initially, `arrow_downward` when selected, rotated 180° for ascending; `aria-sort` on header; polite column/direction feedback |
 | Filter | Visible count; explicit no-results text; Reset filter when empty |
 | Missing data | `N/A`, not zero |
 | Badge | Compact 12px pill; 8px horizontal / 4px vertical padding; explicit status text |
@@ -349,8 +386,8 @@ components:
 - Use a keyboard-focusable, named local scroll region; prevent horizontal page overflow.
 - Only long tables need sticky headers inside bounded scroll regions.
 - Preserve plain colored assessment text in endpoint rows; do not turn every assessment into a badge.
-- Preserve the original outlined Healthy badge and subtle filled Lower is better badge.
-- Do not claim fictional example values reconcile with unrelated metrics.
+- Use compact badges only for supplied status, such as Objective met. Use a labeled select rather than a badge when readers can change a displayed unit.
+- Reconcile totals, ratios, and percentages that describe the same fixture. Explicitly distinguish measurement windows; the weekly latency series and August request totals are separate.
 
 ### Charts
 
@@ -373,7 +410,7 @@ components:
 - Time → line; category comparison → horizontal bars; discrete periods → vertical bars; relationships → scatter; otherwise table.
 - Other chart types inherit the original flat figure, palette, and compact legend, not the discarded showcase style.
 - Bars start at zero; any materially truncated line axis requires an explicit caption.
-- Keep a written takeaway, accessible chart name, and reachable exact-value table.
+- Keep a written takeaway, accessible chart name, and exact-value table beside the chart. If a unit selector is present, update axis ticks and tooltips together and retain explicit units on the table.
 - No 3D, dual-axis, gradient, or decorative chart treatments.
 - On library failure, show a concise fallback pointing to exact values.
 - Do not replace curved blue/gray lines with a multicolor dashed, unfilled style.
@@ -420,6 +457,7 @@ components:
 - Semantic outlines use the light 300 / dark 900 status shades; body text remains neutral.
 - Neutral labels use heading color, as in the original Recommendation.
 - Use success only for verified outcomes; keep caution and recommendation wording explicit.
+- Choose the admonition by its message: success for measured improvements, warning for unmet release conditions, tip for practical reading or planning advice, danger for harmful failure modes, and information for sources or definitions. Use these throughout the report where relevant rather than defaulting every callout to a neutral note.
 
 ### Mathematics
 
@@ -443,7 +481,7 @@ components:
 | --- | --- |
 | Panel | #0d0d0d in both themes; zinc-800 outline; 8px radius |
 | Toolbar | Zinc-400, 12px; 16px horizontal / 8px vertical padding |
-| Copy | Compact original control, not a tall replacement button |
+| Copy | Shared ghost button on the code palette; icon and text label; 28px minimum height |
 | Code | Original mono stack; 16px/24px; 20px padding |
 | Highlighting | Versioned Highlight.js GitHub Dark stylesheet |
 | Overflow | Preserve indentation and lines; horizontal scrolling |
@@ -464,15 +502,15 @@ components:
 | Summary | 14px medium; 20px horizontal / 16px vertical padding; ≥44px target |
 | Mobile contents summary | 16px horizontal / 12px vertical padding |
 | Hover | Zinc-50 / zinc-900 at 60% opacity; no permanent filled open-summary redesign |
-| Icon | Trailing 20px `add`, zinc-400; 45° rotation when open |
-| Focus | Inset 2px blue-500 ring |
+| Icon | Trailing 20px `expand_more`, zinc-400; 180° rotation when open |
+| Focus | Inset 2px neutral zinc-500 ring |
 | Body | 20px horizontal / 16px bottom padding; muted 14px/24px text |
 | Animation | 190ms `cubic-bezier(.2,.8,.2,1)`; height/opacity; at most 4px offset |
 | Reduced motion / unsupported animation | Native instant toggle |
 
 - Preserve keyboard activation, both animation directions, and cancellation handling.
 - Keep essential conclusions visible outside closed details.
-- Additional examples belong in the closed component-reference disclosure so the original report remains the default presentation.
+- Disclosures contain actual methodology, limits, or supporting detail. Do not hide a component gallery in the report.
 
 ### Supporting content and optional controls
 
@@ -481,22 +519,24 @@ components:
 | Evidence card | Neutral 1px outline; 8px radius; 24px padding; transparent fill; no shadow |
 | Action list | Native numbered list; owner/deadline only if supplied |
 | Timeline | Neutral 1px left rule; 16px inset; bold supplied date |
-| Progress | Native `<progress>`; visible label and numeric value; 8px track; blue-600 accent |
-| Loading | Native indeterminate progress only for actual loading; explicit label |
+| Progress | Native `.report-progress`; visible label and count/percentage; 4px track; 2px radius; neutral track/fill tokens; no border, gradient, glow, or saturated accent |
+| Loading | Only for an actual pending operation; explicit label; neutral treatment; omit from static evidence |
 | Empty state | Neutral outlined 8px panel; 24px padding; plain limitation text |
 | Error state | Danger admonition |
 | Dialog | Native `<dialog>`; page fill; neutral outline; 8px radius; 24px padding; max-width 512px; 24px viewport margins |
 
 - Dialog uses `aria-labelledby`, `showModal()`, labeled Close, Escape, and focus restoration.
 - No fabricated milestones, loading decoration, or essential evidence hidden in modal UI.
-- Mark demonstration states as examples; distinguish zero results from missing evidence.
+- Style progress explicitly with `appearance: none`, `::-webkit-progress-bar`, `::-webkit-progress-value`, and `::-moz-progress-bar`. An `accent-color` alone leaves platform styling inconsistent.
+- Set progress `value`/`max` from actual completion counts and update the visible percentage and fallback text together. The example uses four release checks, initially three complete.
+- Keep fictional measurements clearly labeled as one scenario. Distinguish zero filter results, missing evidence, and invalid user input. Do not fabricate loading or error panels to show a component.
 - Omit all components the report content does not need.
 
 ### Accessibility, motion, fallbacks, and print
 
 | Concern | Rule |
 | --- | --- |
-| Control transitions | 150ms color/border/shadow; 120ms press; scale .97 |
+| Control transitions | 150ms color/background/border; no geometric press motion |
 | Theme transition | Temporary 180ms color/background/border/shadow; remove transition class afterward |
 | Disclosure motion | Original 190ms enhancement |
 | Reduced motion | Disable nonessential animation and smooth scrolling, including Chart.js |
@@ -507,11 +547,13 @@ components:
 
 | Print concern | Rule |
 | --- | --- |
-| Hide | Utilities, navigation, filters, forms, copy/dialog controls |
+| Hide | Utilities, navigation, filters, editable inputs, copy/dialog/download controls |
+| Planning / review | Retain the calculated result, current checklist counts, and entered review note |
 | Colors | White background, black text and syntax spans; remove shadows |
 | Width / overflow | Full document width; unwrap scroll regions; wrap long code |
+| Page margins | 14mm through `@page`; no clipping at paper edges |
 | Disclosure / filter state | Expand details; show all rows; restore prior states afterward |
-| Rich evidence | Exact tables and readable diagram equivalents remain available |
+| Rich evidence | Exact tables remain available; print the diagram's prose equivalent to preserve legibility in either theme |
 | Page breaks | Keep headings with content; avoid splitting short figures/code/rows; allow long sections/tables to break |
 | Validation | Inspect actual print output, not a screen-only screenshot |
 
@@ -522,8 +564,8 @@ components:
 | Read this contract and the original example | Treat Google's file format as permission to redesign |
 | Preserve original utilities, title scale, KPI strip, prose grid, and rail | Move controls into the header or box every component |
 | Preserve original blue/gray curved chart and horizontal Mermaid | Substitute the discarded showcase chart/diagram defaults |
-| Change content, IDs, data, and necessary component count | Change palette, font, spacing, radii, or visual identity |
-| Keep extensions as secondary examples using existing patterns | Replace the original report with a component catalog |
+| Apply shared neutral control tokens and thin progress styling consistently | Reintroduce blue action fills, pill utility buttons, press scaling, or platform-default progress |
+| Use components for actual evidence, planning, or remediation within one narrative | Add a showcase, inert preview controls, or a component appendix |
 | Ask when an essential new interaction has no defined pattern | Invent a new design system |
 | Verify evidence and label limitations | Copy fictional example claims into real reports |
 | Test included components in both themes, desktop/mobile, and print | Claim untested behavior or Google/OpenAI affiliation |
