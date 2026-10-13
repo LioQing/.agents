@@ -1,6 +1,12 @@
 ---
 name: guided-learning
-description: Teach code snippets, diffs, PRs, system flows, or dense technical concepts as an interactive "class" instead of a wall of text - small chunks, deliberate pause points, check-for-understanding questions, fun facts, and pointers for self-study. Use this skill whenever the user asks to walk through, explain, break down, teach, or help them understand code, a diff/PR, an architecture or request flow, an algorithm, or any technical concept - especially when phrases like "walk me through", "explain this to me", "I don't get how X works", "teach me", "ELI5", "help me understand", or "what does this diff do" appear, or when the material is long or complex enough that a single full explanation would overwhelm. Prefer this over a one-shot explanation for anything non-trivial. Skip only for quick one-line factual answers.
+description: >-
+  Provide interactive, step-by-step teaching for complex technical topics when
+  the user explicitly requests a comprehensive walkthrough, tutorial, or guided
+  lesson. Do not use for ordinary questions, concise explanations,
+  troubleshooting, or requests for suggestions. Words such as "explain" or
+  "understand" alone are not sufficient triggers. Topic complexity alone is not
+  sufficient either. When uncertain, answer normally without loading this skill.
 ---
 
 # Guided Learning

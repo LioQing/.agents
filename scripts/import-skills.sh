@@ -17,9 +17,13 @@ for skill in "$source_dir/"*/; do
     skill=${skill%/}; name=${skill##*/}
     paths+=("$skill"); names+=("$name")
 
-    if [[ -e "$REPO_ROOT/skills/$name" || -L "$REPO_ROOT/skills/$name" ]]; then
-        MENU_LABELS+=("$name (unavailable: name already exists in repo)")
+    destination="$REPO_ROOT/skills/$name"
+    if [[ -L $destination || ( -e $destination && ! -d $destination ) ]]; then
+        MENU_LABELS+=("$name (unavailable: destination is a file or link)")
         MENU_ENABLED+=(0)
+    elif [[ -d $destination ]]; then
+        MENU_LABELS+=("$name (already exists in repo: replacement requires confirmation)")
+        MENU_ENABLED+=(1)
     else
         MENU_LABELS+=("$name"); MENU_ENABLED+=(1)
     fi
@@ -39,22 +43,50 @@ if ! select_menu 'Choose how to import selected skills' 0; then
 fi
 move=${MENU_RESULT[0]}
 
-mkdir -p "$REPO_ROOT/skills"
+accepted=(); replacing=()
 for index in "${selection[@]}"; do
     destination="$REPO_ROOT/skills/${names[index]}"
+    replacing[index]=0
+    if [[ -e $destination || -L $destination ]]; then
+        [[ -d $destination && ! -L $destination ]] || die "Refusing to replace a file or symbolic link: $destination"
+        printf 'Replace %s? [y/N] ' "$destination"
+        IFS= read -r answer || answer=''
+        case "$answer" in y|Y|yes|YES) ;; *) printf 'Skipped %s\n' "$destination"; continue;; esac
+        replacing[index]=1
+    fi
+    accepted+=("$index")
+done
+((${#accepted[@]} > 0)) || exit 0
 
-    # Check again in case the repo changed while the menu was open.
-    [[ ! -e $destination && ! -L $destination ]] || die "Destination now exists: $destination"
-    mkdir "$destination"
+mkdir -p "$REPO_ROOT/skills"
+staging=$(mktemp -d "$REPO_ROOT/skills/.import-XXXXXXXX")
+trap 'rm -rf -- "$staging"' EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
-    # Dereference installed skill links to make a self-contained copy.
-    cp -RL "${paths[index]}/." "$destination/"
+# Stage every copy first: installed links may target skills being replaced.
+for index in "${accepted[@]}"; do
+    mkdir "$staging/${names[index]}"
+    cp -RL "${paths[index]}/." "$staging/${names[index]}/"
+done
+
+for index in "${accepted[@]}"; do
+    destination="$REPO_ROOT/skills/${names[index]}"
+    if [[ -e $destination || -L $destination ]]; then
+        [[ ${replacing[index]} == 1 && -d $destination && ! -L $destination ]] ||
+            die "Destination changed while importing: $destination"
+        backup="${destination}.backup-$(date +%Y%m%d-%H%M%S)-$$"
+        [[ ! -e $backup && ! -L $backup ]] || die "Backup already exists: $backup"
+        mv -- "$destination" "$backup"
+        printf 'Backup: %s\n' "$backup"
+    fi
+    mv -- "$staging/${names[index]}" "$destination"
     printf 'Imported %s\n' "${names[index]}"
 done
 
-# Copy every selection first: one selected link may target another selected skill.
+# Remove only successfully imported selections, never declined replacements.
 if [[ $move == 1 ]]; then
-    for index in "${selection[@]}"; do
+    for index in "${accepted[@]}"; do
         # No trailing slash; rm does not follow directory symlinks.
         rm -rf -- "${paths[index]}"
         printf 'Removed original %s\n' "${paths[index]}"

@@ -308,7 +308,7 @@ printf '%s\\n' "$destination" >> "$FAKE_CURL_LOG"
         (source / "linked").symlink_to(source / "alpha", target_is_directory=True)
         # Select alpha and linked; Space on the conflicting entry is ignored.
         output = self.run_script("import-skills.sh", b" \x1b[B \x1b[B \n\n")
-        self.assertIn("unavailable: name already exists", output)
+        self.assertIn("unavailable: destination is a file or link", output)
         self.assertEqual((self.repo / "skills/conflict").read_text(), "leave alone")
         self.assertEqual((self.repo / "skills/alpha/.hidden").read_text(), "hidden")
         self.assertEqual((self.repo / "skills/linked/assets/file [1].txt").read_text(), "asset")
@@ -317,7 +317,76 @@ printf '%s\\n' "$destination" >> "$FAKE_CURL_LOG"
         self.assertTrue((source / "alpha/SKILL.md").exists())
         self.assertTrue((source / "linked").is_symlink())
         self.assertIn("npx skills add lioqing/.agents --global", output)
-        self.assertIn("No available choices", self.run_script("import-skills.sh", b""))
+        self.assertIn("replacement requires confirmation", self.run_script("import-skills.sh", b"q"))
+
+    def test_skill_replace_with_backup_and_no_merge(self):
+        source = self.home / ".agents/skills/alpha"
+        destination = self.repo / "skills/alpha"
+        self.write(source / "SKILL.md", "new skill")
+        self.write(source / ".hidden", "new hidden")
+        self.write(destination / "SKILL.md", "old skill")
+        self.write(destination / "stale.txt", "old asset")
+        external = self.home / "external assets"
+        self.write(external / "asset.txt", "external")
+        (destination / "assets").symlink_to(external, target_is_directory=True)
+        output = self.run_script("import-skills.sh", b" \n\nyes\n")
+        self.assertIn("replacement requires confirmation", output)
+        self.assertIn("Backup:", output)
+        self.assertEqual((destination / "SKILL.md").read_text(), "new skill")
+        self.assertEqual((destination / ".hidden").read_text(), "new hidden")
+        self.assertFalse((destination / "stale.txt").exists())
+        self.assertFalse((destination / "assets").exists())
+        backups = list(destination.parent.glob("alpha.backup-*"))
+        self.assertEqual(len(backups), 1)
+        self.assertEqual((backups[0] / "SKILL.md").read_text(), "old skill")
+        self.assertEqual((backups[0] / "stale.txt").read_text(), "old asset")
+        self.assertTrue((backups[0] / "assets").is_symlink())
+        self.assertEqual((external / "asset.txt").read_text(), "external")
+        self.assertTrue((source / "SKILL.md").exists())
+        self.assertEqual(list(destination.parent.glob(".import-*")), [])
+
+    def test_skill_declined_replacement_move_preserves_original(self):
+        source = self.home / ".agents/skills"
+        destination = self.repo / "skills/alpha"
+        self.write(source / "alpha/SKILL.md", "new alpha")
+        self.write(source / "beta/SKILL.md", "beta")
+        self.write(destination / "SKILL.md", "old alpha")
+        self.run_script("import-skills.sh", b" \x1b[B \n\x1b[B\nno\n")
+        self.assertEqual((destination / "SKILL.md").read_text(), "old alpha")
+        self.assertEqual((source / "alpha/SKILL.md").read_text(), "new alpha")
+        self.assertFalse((source / "beta").exists())
+        self.assertEqual((self.repo / "skills/beta/SKILL.md").read_text(), "beta")
+        self.assertEqual(list(destination.parent.glob("alpha.backup-*")), [])
+        self.run_script("import-skills.sh", b" \n\x1b[B\nn\n")
+        self.assertEqual((source / "alpha/SKILL.md").read_text(), "new alpha")
+        self.assertEqual(list(destination.parent.glob(".import-*")), [])
+
+    def test_skill_replacements_stage_repo_link_sources_before_changes(self):
+        source = self.home / ".agents/skills"
+        destination = self.repo / "skills/alpha"
+        self.write(source / "alpha/SKILL.md", "new alpha")
+        self.write(destination / "SKILL.md", "old alpha")
+        (source / "linked").symlink_to(destination, target_is_directory=True)
+        self.run_script("import-skills.sh", b" \x1b[B \n\x1b[B\ny\n")
+        self.assertEqual((destination / "SKILL.md").read_text(), "new alpha")
+        self.assertEqual((self.repo / "skills/linked/SKILL.md").read_text(), "old alpha")
+        self.assertFalse((source / "alpha").exists())
+        self.assertFalse((source / "linked").is_symlink())
+
+    def test_skill_repo_symlink_destinations_are_unavailable(self):
+        source = self.home / ".agents/skills"
+        target = self.home / "external skill"
+        self.write(target / "SKILL.md", "untouched")
+        self.write(source / "linked/SKILL.md", "new skill")
+        self.write(source / "dangling/SKILL.md", "new skill")
+        (self.repo / "skills").mkdir()
+        (self.repo / "skills/linked").symlink_to(target, target_is_directory=True)
+        (self.repo / "skills/dangling").symlink_to(self.root / "missing")
+        output = self.run_script("import-skills.sh", b"")
+        self.assertIn("No available choices", output)
+        self.assertTrue((self.repo / "skills/linked").is_symlink())
+        self.assertTrue((self.repo / "skills/dangling").is_symlink())
+        self.assertEqual((target / "SKILL.md").read_text(), "untouched")
 
     def test_skill_move_and_link_safety(self):
         source = self.home / ".agents/skills"
@@ -359,10 +428,15 @@ printf '%s\\n' "$destination" >> "$FAKE_CURL_LOG"
         source = self.home / ".agents/skills"
         self.write(source / "alpha/SKILL.md", "alpha")
         self.write(source / "broken/SKILL.md", "broken")
+        self.write(self.repo / "skills/alpha/SKILL.md", "old alpha")
         (source / "broken/loop").symlink_to(source / "broken", target_is_directory=True)
-        self.run_script("import-skills.sh", b" \x1b[B \n\x1b[B\n", expected_exit=1)
+        self.run_script("import-skills.sh", b" \x1b[B \n\x1b[B\ny\n", expected_exit=1)
         self.assertEqual((source / "alpha/SKILL.md").read_text(), "alpha")
         self.assertEqual((source / "broken/SKILL.md").read_text(), "broken")
+        self.assertEqual((self.repo / "skills/alpha/SKILL.md").read_text(), "old alpha")
+        self.assertEqual(list((self.repo / "skills").glob("alpha.backup-*")), [])
+        self.assertEqual(list((self.repo / "skills").glob(".import-*")), [])
+        self.assertFalse((self.repo / "skills/broken").exists())
 
     def test_paging_and_escape(self):
         for i in range(12):

@@ -119,10 +119,12 @@ bash ./scripts/import-skills.sh
 
 - Select skills containing `SKILL.md` from `~/.agents/skills` to import into `skills/`.
 - Choose **Copy** (default, keeps originals) or **Move**. Cancelling changes nothing.
-- Existing repo names are unavailable; nothing is overwritten.
+- Existing repo skill directories can be selected. Each replacement requires `y` or `yes` and creates a `<skill>.backup-<timestamp>-<unique suffix>` directory beside the original.
+- Replacements copy the entire skill, not merge it. Repo files and symbolic links remain unavailable.
 - Copies include hidden files and resources, following symbolic links for self-contained copies.
-- Move removes originals only after all copies succeed. Links and junctions are removed without deleting their targets.
-- Failed copies keep all originals; failed removals may leave originals behind.
+- All selected copies are staged before replacing any repo skills. Failed copies leave existing skills and originals untouched.
+- Move removes imported originals only after all imports succeed. Declined replacements keep their originals. Links and junctions are removed without deleting their targets.
+- Failed removals may leave originals behind. Review and remove backup directories before committing or installing skills.
 
 Review, commit, and push imports, then update installed skills:
 
@@ -164,13 +166,13 @@ Bash imports also accept **j/k**; on Bash 3.2, **Esc** may take one second, whil
 The Bash installer uses numbers followed by Enter; choose **Cancel** or enter **q** to quit.
 
 - PowerShell: **5.0+**; replace `pwsh` with `powershell` on Windows PowerShell 5.x.
-- Bash: **3.2+**, `cp`, `mkdir`, `rm`, and `date` (macOS, Linux, WSL, or Git Bash).
+- Bash: **3.2+**, `cp`, `mkdir`, `mv`, `rm`, `mktemp`, and `date` (macOS, Linux, WSL, or Git Bash).
   Installation also needs `curl` and `mktemp`.
 - Arrow-key menus need an interactive ANSI terminal with no redirected input/output, including custom-path installs without a backup option. Recommended size: 80 × 15.
 - No external menu package is needed.
 - Paths use the current user's home (Linux home under WSL). Import scripts find the repo from their own location.
 - Scripts never install skills or commit automatically; only **Move** deletes originals.
-- Failed copies may leave partial destinations. Inspect before retrying; review imports and backups before committing.
+- Failed imports may leave some destinations updated. Inspect before retrying; review imports and backups before committing.
 
 ## Tests
 

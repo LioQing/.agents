@@ -215,7 +215,7 @@ function Invoke-WebRequest {
     Assert-True $global:CapturedMultiple 'skill import is multi-select'
     Assert-True ($global:CapturedItems.Count -eq 2) 'invalid skill excluded'
     Assert-True (-not $global:CapturedItems[1].Enabled) 'conflict disabled'
-    Assert-True ($global:CapturedItems[1].Label -like '*unavailable*') 'conflict visibly unavailable'
+    Assert-True ($global:CapturedItems[1].Label -like '*unavailable: destination is a file or link*') 'file conflict visibly unavailable'
     Assert-True ((Get-Content -LiteralPath (Join-Path $repo 'skills/alpha/.hidden') -Raw) -eq 'hidden asset') 'hidden file copied'
     Assert-True ((Get-Content -LiteralPath (Join-Path $repo 'skills/alpha/assets/file [1].txt') -Raw) -eq 'nested asset') 'nested file with literal brackets copied'
     Assert-True ((Get-Content -LiteralPath (Join-Path $repo 'skills/conflict') -Raw) -eq 'existing file with conflicting name') 'conflict untouched'
@@ -223,7 +223,30 @@ function Invoke-WebRequest {
 
     $global:MenuSelection = @()
     & (Join-Path $repo 'scripts/import-skills.ps1')
-    Assert-True (-not $global:CapturedItems[0].Enabled) 'newly imported skill is now unavailable'
+    Assert-True $global:CapturedItems[0].Enabled 'existing skill directory remains selectable'
+    Assert-True ($global:CapturedItems[0].Label -like '*replacement requires confirmation*') 'existing skill visibly marked for replacement'
+
+    # Declining a replacement in move mode keeps both trees and creates no backup.
+    $global:MenuSelection = @(0)
+    $global:SkillImportMode = @(1)
+    $global:OverwriteAnswer = 'no'
+    Write-Fixture (Join-Path $repo 'skills/alpha/stale.txt') 'old asset'
+    & (Join-Path $repo 'scripts/import-skills.ps1')
+    Assert-True (Test-Path -LiteralPath (Join-Path $HOME '.agents/skills/alpha/SKILL.md')) 'declined move keeps source'
+    Assert-True (Test-Path -LiteralPath (Join-Path $repo 'skills/alpha/stale.txt')) 'declined replacement keeps destination'
+    Assert-True (@(Get-ChildItem -LiteralPath (Join-Path $repo 'skills') -Filter 'alpha.backup-*').Count -eq 0) 'declined replacement creates no backup'
+
+    $global:SkillImportMode = @(0)
+    $global:OverwriteAnswer = 'yes'
+    Write-Fixture (Join-Path $HOME '.agents/skills/alpha/SKILL.md') 'updated alpha skill'
+    & (Join-Path $repo 'scripts/import-skills.ps1')
+    $skillBackups = @(Get-ChildItem -LiteralPath (Join-Path $repo 'skills') -Filter 'alpha.backup-*')
+    Assert-True ($skillBackups.Count -eq 1) 'replacement creates one skill backup'
+    Assert-True ((Get-Content -LiteralPath (Join-Path $skillBackups[0].FullName 'SKILL.md') -Raw) -eq 'alpha skill') 'backup preserves previous skill'
+    Assert-True (Test-Path -LiteralPath (Join-Path $skillBackups[0].FullName 'stale.txt')) 'backup preserves old assets'
+    Assert-True (-not (Test-Path -LiteralPath (Join-Path $repo 'skills/alpha/stale.txt'))) 'replacement does not merge stale files'
+    Assert-True ((Get-Content -LiteralPath (Join-Path $repo 'skills/alpha/SKILL.md') -Raw) -eq 'updated alpha skill') 'replacement imports new skill'
+    Assert-True (@(Get-ChildItem -LiteralPath (Join-Path $repo 'skills') -Force -Filter '.import-*').Count -eq 0) 'staging directory cleaned up'
 
     # Directory link imports should produce real directories, not home links.
     $linked = Join-Path $HOME '.agents/skills/linked'
@@ -278,14 +301,44 @@ function Invoke-WebRequest {
     Write-Fixture (Join-Path $good 'SKILL.md') 'good'
     Write-Fixture (Join-Path $bad 'SKILL.md') 'bad'
     New-Item -ItemType $linkType -Path (Join-Path $bad 'loop') -Target $bad | Out-Null
+    Write-Fixture (Join-Path $repo 'skills/fail-a-good/SKILL.md') 'previous good'
     $global:MenuSelection = @(3, 4)
     $failed = $false
     try { & (Join-Path $repo 'scripts/import-skills.ps1') } catch { $failed = $true }
     Assert-True $failed 'copy failure reported in move mode'
     Assert-True (Test-Path -LiteralPath (Join-Path $good 'SKILL.md')) 'earlier original preserved on later copy failure'
     Assert-True (Test-Path -LiteralPath (Join-Path $bad 'SKILL.md')) 'failed original preserved'
+    Assert-True ((Get-Content -LiteralPath (Join-Path $repo 'skills/fail-a-good/SKILL.md') -Raw) -eq 'previous good') 'later copy failure preserves earlier replacement destination'
+    Assert-True (@(Get-ChildItem -LiteralPath (Join-Path $repo 'skills') -Filter 'fail-a-good.backup-*').Count -eq 0) 'copy failure creates no backup'
+    Assert-True (-not (Test-Path -LiteralPath (Join-Path $repo 'skills/fail-b-loop'))) 'copy failure leaves no partial destination'
+    Assert-True (@(Get-ChildItem -LiteralPath (Join-Path $repo 'skills') -Force -Filter '.import-*').Count -eq 0) 'failed staging cleaned up'
     # Remove the loop itself before the sandbox cleanup on older PowerShell.
     [IO.Directory]::Delete((Join-Path $bad 'loop'))
+
+    # Stage a source linked to an earlier replacement before changing that target.
+    $repoLink = Join-Path $HOME '.agents/skills/z-repo-linked'
+    New-Item -ItemType $linkType -Path $repoLink -Target (Join-Path $repo 'skills/alpha') | Out-Null
+    Write-Fixture (Join-Path $HOME '.agents/skills/alpha/SKILL.md') 'new alpha'
+    $global:MenuSelection = @(0, 6)
+    & (Join-Path $repo 'scripts/import-skills.ps1')
+    Assert-True ((Get-Content -LiteralPath (Join-Path $repo 'skills/alpha/SKILL.md') -Raw) -eq 'new alpha') 'move replaces existing skill'
+    Assert-True ((Get-Content -LiteralPath (Join-Path $repo 'skills/z-repo-linked/SKILL.md') -Raw) -eq 'updated alpha skill') 'linked source staged before its repo target changes'
+    Assert-True (-not (Test-Path -LiteralPath (Join-Path $HOME '.agents/skills/alpha'))) 'successful replacement move removes original'
+    Assert-True (-not (Test-Path -LiteralPath $repoLink)) 'successful replacement move removes source link only'
+
+    # A repo junction is unavailable, and forced selection still refuses it.
+    New-Item -ItemType $linkType -Path (Join-Path $repo 'skills/linked-destination') -Target (Join-Path $repo 'skills/alpha') | Out-Null
+    Write-Fixture (Join-Path $HOME '.agents/skills/linked-destination/SKILL.md') 'do not import'
+    $global:MenuSelection = @()
+    & (Join-Path $repo 'scripts/import-skills.ps1')
+    $linkedItem = @($global:CapturedItems | Where-Object { $_.Label -like 'linked-destination *' })
+    Assert-True (-not $linkedItem[0].Enabled) 'repo junction unavailable'
+    $global:MenuSelection = @([Array]::IndexOf($global:CapturedItems, $linkedItem[0]))
+    $failed = $false
+    try { & (Join-Path $repo 'scripts/import-skills.ps1') } catch { $failed = $true }
+    Assert-True $failed 'repo junction replacement refused'
+    Assert-True ((Get-Content -LiteralPath (Join-Path $repo 'skills/alpha/SKILL.md') -Raw) -eq 'new alpha') 'repo junction target untouched'
+    [IO.Directory]::Delete((Join-Path $repo 'skills/linked-destination'))
 
     # Exercise the real menu logic using synthetic ConsoleKey values.
     function Read-MenuKey {
