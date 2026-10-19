@@ -1,0 +1,4 @@
+interface:
+  display_name: "Markdown Slides"
+  short_description: "Build HTML slides with scoped agent customization"
+  default_prompt: "Use $markdown-slides to build an HTML presentation from my Markdown and follow each slide's instruction."

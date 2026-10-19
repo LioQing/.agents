@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="slide-builder-version" content="@@VERSION@@">
+  <title>@@TITLE@@</title>
+  <link rel="icon" href="data:,">
+  <script>
+    (() => {
+      let stored;
+      try { stored = localStorage.getItem('slides-theme'); } catch {}
+      const preview = new URLSearchParams(location.search).get('theme');
+      const dark = preview === 'dark' || (preview !== 'light' && (stored ? stored === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches));
+      document.documentElement.classList.toggle('dark', dark);
+      document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+    })();
+  </script>
+  <style id="deck-structure">@@STRUCTURE@@</style>
+  <style id="deck-theme">@@THEME@@</style>
+@@SLIDE_STYLES@@
+</head>
+<body>
+  <main id="stage" aria-label="Presentation">
+    <div id="canvas-fit"><div id="deck">@@SLIDES@@</div></div>
+    <aside id="overview" aria-label="Slide overview" hidden>
+      <div id="overview-header">
+        <h2>Slides</h2>
+        <button id="overview-close" type="button" aria-label="Close slide overview">Close</button>
+      </div>
+      <nav aria-label="Choose a slide">@@OVERVIEW@@</nav>
+    </aside>
+    <p id="layout-warning" role="status" hidden></p>
+  </main>
+  <footer id="control-bar" aria-label="Presentation controls">
+    <div id="navigation" role="group" aria-label="Slide navigation">
+      <button id="previous-slide" type="button" aria-label="Previous slide">Previous</button>
+      <output id="slide-counter" aria-label="Slide position"></output>
+      <button id="next-slide" type="button" aria-label="Next slide">Next</button>
+    </div>
+    <div id="utilities" role="group" aria-label="Presentation utilities">
+      <button id="overview-toggle" type="button" aria-expanded="false" aria-controls="overview">Overview</button>
+      <button id="source-toggle" type="button" aria-haspopup="dialog">Source</button>
+      <button id="theme-toggle" type="button" aria-label="Switch color theme">Theme</button>
+      <button id="fullscreen-toggle" type="button">Fullscreen</button>
+      <button id="print-deck" type="button">Print</button>
+    </div>
+  </footer>
+  <p id="deck-status" class="sr-only" role="status" aria-live="polite"></p>
+  <dialog id="source-dialog" aria-labelledby="source-title">
+    <h2 id="source-title">Original slide source</h2>
+    <h3>Instruction</h3><pre id="source-instruction"></pre>
+    <h3>User-provided Markdown</h3><pre id="source-markdown"></pre>
+    <button id="source-close" type="button" autofocus>Close</button>
+  </dialog>
+  <script id="deck-source" type="application/json">@@SOURCE@@</script>
+  <script id="deck-runtime">@@RUNTIME@@</script>
+@@SLIDE_SCRIPTS@@
+</body>
+</html>

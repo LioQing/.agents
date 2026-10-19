@@ -1,12 +1,12 @@
 ---
 name: guided-learning
-description: >-
-  Provide interactive, step-by-step teaching for complex technical topics when
-  the user explicitly requests a comprehensive walkthrough, tutorial, or guided
-  lesson. Do not use for ordinary questions, concise explanations,
-  troubleshooting, or requests for suggestions. Words such as "explain" or
-  "understand" alone are not sufficient triggers. Topic complexity alone is not
-  sufficient either. When uncertain, answer normally without loading this skill.
+description: Provide interactive, step-by-step teaching for complex technical
+  topics when the user explicitly requests a comprehensive walkthrough,
+  tutorial, or guided lesson. Do not use for ordinary questions, concise
+  explanations, troubleshooting, or requests for suggestions. Words such as
+  "explain" or "understand" alone are not sufficient triggers. Topic complexity
+  alone is not sufficient either. When uncertain, answer normally without
+  loading this skill.
 ---
 
 # Guided Learning

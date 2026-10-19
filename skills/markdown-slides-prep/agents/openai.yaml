@@ -1,0 +1,4 @@
+interface:
+  display_name: "Markdown Slides Prep"
+  short_description: "Turn notes into reviewable slide Markdown"
+  default_prompt: "Use $markdown-slides-prep to turn my notes into slide Markdown for review, without generating HTML."

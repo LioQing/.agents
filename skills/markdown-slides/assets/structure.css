@@ -1,0 +1,45 @@
+/* Behavior and fixed-canvas geometry only. Aesthetics belong in DESIGN.md. */
+* { box-sizing: border-box; }
+html, body { margin: 0; width: 100%; height: 100%; }
+body { overflow: hidden; display: grid; grid-template-rows: minmax(0, 1fr) auto; }
+[hidden] { display: none !important; }
+#control-bar { z-index: 20; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 16px; min-width: 0; }
+#utilities { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px; min-width: 0; }
+#navigation { display: flex; align-items: center; gap: 12px; }
+#stage { position: relative; min-width: 0; min-height: 0; margin: 20px; display: flex; align-items: center; justify-content: center; }
+#canvas-fit { position: relative; flex: none; }
+#deck { position: absolute; left: 0; top: 0; width: 1280px; height: 720px; transform-origin: top left; }
+.slide { position: absolute; inset: 0; width: 1280px; height: 720px; overflow: visible; }
+.slide-content { width: 100%; height: 100%; display: flow-root; }
+#overview { position: absolute; right: 0; top: 0; bottom: 0; z-index: 30; width: min(320px, 100%); overflow: auto; }
+#overview-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+#overview nav { display: flex; flex-direction: column; }
+#overview nav button { text-align: left; white-space: normal; }
+#source-dialog { max-height: calc(100vh - 48px); width: min(860px, calc(100vw - 48px)); overflow: auto; }
+#source-dialog pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+#layout-warning { position: absolute; bottom: 0; left: 0; right: 0; z-index: 21; margin: 0; text-align: center; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+.slide img, .slide svg, .slide canvas { max-width: 100%; }
+.table-scroll, .slide pre { max-width: 100%; overflow: auto; }
+.table-scroll:focus-visible { outline-offset: 3px; }
+.slide figure { margin-inline: 0; }
+.slide-content > :first-child { margin-top: 0; }
+.slide-content > :last-child { margin-bottom: 0; }
+@media (max-width: 640px) {
+  #control-bar { justify-content: center; }
+  #utilities { justify-content: center; }
+  #stage { margin: 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+@page { size: 13.333333in 7.5in; margin: 0; }
+@media print {
+  html, body { display: block; width: auto; height: auto; overflow: visible; }
+  #control-bar, #utilities, #navigation, #overview, #source-dialog, #layout-warning, #deck-status { display: none !important; }
+  #stage, #canvas-fit, #deck { display: block; position: static; inset: auto; margin: 0; width: 1280px !important; height: auto !important; transform: none !important; }
+  .slide, .slide[hidden] { display: block !important; position: relative; width: 1280px; height: 720px; break-after: page; break-inside: avoid; overflow: visible; }
+  .slide:last-child { break-after: auto; }
+  .slide-content { height: 100%; }
+  .table-scroll, .slide pre { overflow: visible; }
+}
