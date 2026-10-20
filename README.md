@@ -2,6 +2,11 @@
 
 My shared agent instructions (`AGENTS.md`) and reusable skills (`skills/`).
 
+> [!TIP]
+>
+> To install agent instructions or skills from this repository, no cloning is required.
+> The commands below can be run in your computer without downloading any files from this repository.
+
 ## Install skills
 
 Requires Node.js/npm:
@@ -14,7 +19,7 @@ Choose skills and agents when prompted.
 
 ## Install agent instructions
 
-No clone required. Installers download `AGENTS.md` from GitHub.
+Installers download `AGENTS.md` from GitHub.
 Review the scripts before running them.
 
 PowerShell 5.0+:
