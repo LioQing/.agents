@@ -29,7 +29,7 @@ An empty instruction is treated as absent. Only one annotation is recognized at 
 
 The safe raw HTML subset covers ordinary prose tags, semantic tables, figures, details, spans/divs, and disabled task checkboxes. No raw scripts, styles, frames, event handlers, arbitrary IDs, or inline styling are carried over from Markdown. This avoids unintended execution and collisions with protected presentation regions. Agent customization can add richer semantic HTML through approved editable slots.
 
-GitHub admonitions support `[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, and `[!CAUTION]` at the start of a blockquote. Marker capitalization is exact. Multiline and nested Markdown are retained. Unknown markers remain ordinary quotes. Type labels and semantic classes stay constant across themes; appearance belongs to `DESIGN.md`.
+GitHub-style admonitions support `[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, and `[!CAUTION]`, plus the nonstandard `[!INFO]` extension, at the start of a blockquote. Marker capitalization is exact. Multiline and nested Markdown are retained. Unknown markers remain ordinary quotes. Type labels and semantic classes stay constant across themes; appearance belongs to `DESIGN.md`. `[!INFO]` renders with the label Info and class `.admonition-info`.
 
 ## Commands
 

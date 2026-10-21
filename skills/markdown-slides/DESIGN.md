@@ -1,7 +1,7 @@
 ---
 version: alpha
 name: Northstar Slides
-description: A fixed-canvas presentation adaptation of the Northstar report aesthetic, with quiet developer-documentation typography, zinc neutrals, thin rules, and restrained blue data accents.
+description: A fixed-canvas presentation theme with quiet developer-documentation typography, zinc neutrals, thin rules, and restrained blue data accents.
 colors:
   primary: "#09090b"
   secondary: "#3f3f46"
@@ -13,6 +13,7 @@ colors:
   control-border: "#d4d4d8"
   hover: "#f4f4f5"
   focus: "#52525b"
+  info: "#1d4ed8"
   tip: "#1a7f37"
   important: "#8250df"
   warning: "#b45309"
@@ -30,6 +31,7 @@ colors:
   dark-control-border: "#3f3f46"
   dark-hover: "#27272a"
   dark-focus: "#a1a1aa"
+  dark-info: "#60a5fa"
   dark-tip: "#3fb950"
   dark-important: "#a371f7"
   dark-warning: "#fbbf24"
@@ -81,8 +83,8 @@ components:
 ## Overview
 
 - **Format:** Google's DESIGN.md alpha format: metadata/tokens followed by authoritative human-readable rules.
-- **Direction:** Adapt the `html-report-builder` Northstar report's developer-documentation aesthetic to presentations. Preserve zinc neutrals, restrained blue, flat evidence, quiet controls, and thin rules. Do not copy report-specific reading columns, rail, fictional facts, or section spacing onto slides.
-- **Source of truth:** This document, including its executable CSS below. It is self-contained and does not require another skill to be installed.
+- **Direction:** Use a developer-documentation aesthetic for fixed-canvas presentations: zinc neutrals, restrained blue, flat evidence, quiet controls, and thin rules.
+- **Source of truth:** This self-contained document, including its executable CSS below.
 - **Agent decisions:** Content, instruction-requested composition, and useful evidence-backed elements. Do not independently select different fonts, palettes, shapes, or chart skins.
 - **Precedence:** Explicit user design overrides take priority. Record deck-specific overrides in editable slide CSS, not the shared skill assets.
 - **Identity:** No Google/OpenAI branding, logos, or claims of affiliation. No marketing chrome, gradients, glass, decorative shadows, floating cards, or arbitrary stock art.
@@ -139,7 +141,7 @@ All content is flat. Figures, tables, and KPI groups use horizontal rules rather
 - Controls use 6px corners, 13px/18px medium labels, neutral hover/press, and 150ms color transitions. No press scaling or translation.
 - Minimum 32px control height on desktop. On touch-sized viewports use 44px targets; overview rows and dialog actions use 44px targets at all sizes.
 - Focus is a 2px neutral outline with 3px offset. Disabled controls use native `disabled` and 0.45 opacity.
-- Overview is a collapsible right-hand panel with a neutral outline and no shadow, above the bottom bar. Selecting a slide or using navigation leaves it open. Close it with Overview, its explicit Close button, or Escape. Active slide rows use inherited text, stronger weight, and `aria-current`, not saturated fills.
+- Overview is a collapsible right-hand panel with a neutral outline and no shadow, beside the slide stage and above the bottom bar. It reserves its own layout column, never overlays the canvas, and the entire slide scales to fit the remaining space. Closing it restores the full slide area. Keep this side-by-side separation on small viewports, with a narrower panel and wrapping header controls. Selecting a slide or using navigation leaves it open. Close it with Overview, its explicit Close button, or Escape. Active slide rows use inherited text, stronger weight, and `aria-current`, not saturated fills.
 - Source is a native modal dialog with a 1px neutral outline, 8px radius, 24px padding, and black 48% backdrop. Original Markdown remains selectable monospace text.
 - Theme preference is initialized before paint, stored under `slides-theme`, and falls back to the system preference. `?theme=light` and `?theme=dark` are non-persistent preview overrides. Storage failure must not prevent in-memory toggling.
 - UI labels provide a no-font/no-CDN fallback. No icon font is required. If icons are requested, use Material Symbols Outlined with accessible text labels and hide decorative icons from assistive technology.
@@ -157,11 +159,14 @@ All content is flat. Figures, tables, and KPI groups use horizontal rules rather
 
 ### GitHub-style admonitions
 
-Support exactly the standard markers at the beginning of a blockquote:
+Support the standard markers and the `INFO` extension at the beginning of a blockquote:
 
 ```markdown
 > [!NOTE]
 > Useful background.
+
+> [!INFO]
+> Informational context.
 
 > [!WARNING]
 > A condition that needs attention.
@@ -172,17 +177,18 @@ Also support `TIP`, `IMPORTANT`, and `CAUTION`, nested Markdown, and multiline b
 | Marker | Label | Treatment |
 | --- | --- | --- |
 | `[!NOTE]` | Note | Neutral heading and outline |
+| `[!INFO]` | Info | Blue label and outline |
 | `[!TIP]` | Tip | Green label and outline |
 | `[!IMPORTANT]` | Important | Purple label and outline |
 | `[!WARNING]` | Warning | Amber label and outline |
 | `[!CAUTION]` | Caution | Red label and outline |
 
-GitHub syntax determines semantic type. Tip uses GitHub-style green (`#1a7f37` light / `#3fb950` dark), and Important uses purple (`#8250df` light / `#a371f7` dark). Other admonitions retain this theme's treatments. Caution uses red to distinguish serious risk from warning.
+The marker determines semantic type. Info is a supported extension, not a standard GitHub marker, and uses the blue accent (`#1d4ed8` light / `#60a5fa` dark). Tip uses GitHub-style green (`#1a7f37` light / `#3fb950` dark), and Important uses purple (`#8250df` light / `#a371f7` dark). Other admonitions retain this theme's treatments. Caution uses red to distinguish serious risk from warning.
 
 - Complete 1px outline, 12px radius, page-matched fill, 20px horizontal/16px vertical padding.
 - Explicit 20px semibold label, neutral 20px/1.45 body. Labels do not replace the author's body.
 - Static `role="note"`, never assertive live alerts. Optional leading icons are decorative, not the sole type indication.
-- Tip and Important borders match their label colors. Warning borders: amber-300/amber-900; caution borders: red-300/red-900. Body text stays neutral.
+- Info, Tip, and Important borders match their label colors. Warning borders: amber-300/amber-900; caution borders: red-300/red-900. Body text stays neutral.
 
 ### Agent-generated charts and diagrams
 
@@ -213,7 +219,7 @@ This is the complete aesthetic layer consumed by the builder. Geometry, hiding, 
   --page: #ffffff; --ink: #09090b; --body: #3f3f46; --description: #52525b;
   --muted: #71717a; --link: #1d4ed8; --rule: #e4e4e7; --outline: #d4d4d8;
   --hover: #f4f4f5; --pressed: #e4e4e7; --focus: #52525b;
-  --tip: #1a7f37; --important: #8250df;
+  --info: #1d4ed8; --tip: #1a7f37; --important: #8250df;
   --warning: #b45309; --warning-border: #fcd34d;
   --danger: #b91c1c; --danger-border: #fca5a5;
   --chart-primary: #2563eb; --chart-secondary: #a1a1aa; --chart-grid: #e4e4e7;
@@ -224,7 +230,7 @@ This is the complete aesthetic layer consumed by the builder. Geometry, hiding, 
   --page: #000000; --ink: #f4f4f5; --body: #d4d4d8; --description: #a1a1aa;
   --muted: #a1a1aa; --link: #60a5fa; --rule: #27272a; --outline: #3f3f46;
   --hover: #27272a; --pressed: #3f3f46; --focus: #a1a1aa;
-  --tip: #3fb950; --important: #a371f7;
+  --info: #60a5fa; --tip: #3fb950; --important: #a371f7;
   --warning: #fbbf24; --warning-border: #78350f;
   --danger: #f87171; --danger-border: #7f1d1d; --chart-grid: #27272a;
 }
@@ -259,6 +265,8 @@ body { font-family: var(--sans); color: var(--ink); background: var(--page); tex
 .slide .admonition { border: 1px solid var(--outline); border-radius: 12px; padding: 16px 20px; font-size: 20px; line-height: 1.45; }
 .slide .admonition-title { color: var(--ink); font-weight: 600; margin-bottom: 8px; }
 .slide .admonition-body > :last-child { margin-bottom: 0; }
+.slide .admonition-info { border-color: var(--info); }
+.slide .admonition-info > .admonition-title { color: var(--info); }
 .slide .admonition-tip { border-color: var(--tip); }
 .slide .admonition-tip > .admonition-title { color: var(--tip); }
 .slide .admonition-important { border-color: var(--important); }

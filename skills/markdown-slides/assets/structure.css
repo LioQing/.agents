@@ -1,18 +1,18 @@
 /* Behavior and fixed-canvas geometry only. Aesthetics belong in DESIGN.md. */
 * { box-sizing: border-box; }
 html, body { margin: 0; width: 100%; height: 100%; }
-body { overflow: hidden; display: grid; grid-template-rows: minmax(0, 1fr) auto; }
+body { overflow: hidden; display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: minmax(0, 1fr) auto; }
 [hidden] { display: none !important; }
-#control-bar { z-index: 20; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 16px; min-width: 0; }
+#control-bar { grid-column: 1 / -1; grid-row: 2; z-index: 20; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 16px; min-width: 0; }
 #utilities { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px; min-width: 0; }
 #navigation { display: flex; align-items: center; gap: 12px; }
-#stage { position: relative; min-width: 0; min-height: 0; margin: 20px; display: flex; align-items: center; justify-content: center; }
+#stage { grid-column: 1; grid-row: 1; position: relative; min-width: 0; min-height: 0; margin: 20px; display: flex; align-items: center; justify-content: center; }
 #canvas-fit { position: relative; flex: none; }
 #deck { position: absolute; left: 0; top: 0; width: 1280px; height: 720px; transform-origin: top left; }
 .slide { position: absolute; inset: 0; width: 1280px; height: 720px; overflow: visible; }
 .slide-content { width: 100%; height: 100%; display: flow-root; }
-#overview { position: absolute; right: 0; top: 0; bottom: 0; z-index: 30; width: min(320px, 100%); overflow: auto; }
-#overview-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+#overview { grid-column: 2; grid-row: 1; width: clamp(144px, 30vw, 320px); min-width: 0; min-height: 0; margin: 20px 20px 20px 0; overflow: auto; overflow-wrap: anywhere; }
+#overview-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
 #overview nav { display: flex; flex-direction: column; }
 #overview nav button { text-align: left; white-space: normal; }
 #source-dialog { max-height: calc(100vh - 48px); width: min(860px, calc(100vw - 48px)); overflow: auto; }
@@ -29,6 +29,7 @@ body { overflow: hidden; display: grid; grid-template-rows: minmax(0, 1fr) auto;
   #control-bar { justify-content: center; }
   #utilities { justify-content: center; }
   #stage { margin: 8px; }
+  #overview { margin: 8px 8px 8px 0; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }

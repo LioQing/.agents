@@ -39,7 +39,7 @@ If the user requests proceeding without questions, make conservative, reversible
 - The optional `instruction:` is the first nonblank line of its slide, before the heading/body. It may be a single line or `instruction: |` followed by consistently space-indented lines. Use two spaces as the base indent, no tabs. The first unindented content line ends the annotation.
 - In-slide horizontal rules use `***` or `___`, not a top-level `---`. Code containing `---` must remain inside a closed fence. Write the raw deck to the file, not an outer Markdown code fence around the whole document.
 - Standard Markdown supports headings, paragraphs, lists, blockquotes, tables, task lists, emphasis/strikethrough, links, images, and code blocks. Prefer it over raw HTML, whose safe subset strips scripts, styles, event handlers, and arbitrary IDs.
-- GitHub admonitions use `> [!NOTE]`, `> [!TIP]`, `> [!IMPORTANT]`, `> [!WARNING]`, or `> [!CAUTION]`, then quoted body lines. Use them only when the message merits the label.
+- GitHub-style admonitions use `> [!NOTE]`, `> [!TIP]`, `> [!IMPORTANT]`, `> [!WARNING]`, or `> [!CAUTION]`, plus the supported nonstandard `> [!INFO]` extension, then quoted body lines. `INFO` is for informational context and renders with the blue accent defined in the renderer's design contract. Use them only when the message merits the label.
 - Relative asset paths are relative to the saved `.md` file. Do not invent image filenames or stock-art URLs. Use heading fragments only when the target is unambiguous under the renderer's rules.
 
 ## Instructions are future authorization

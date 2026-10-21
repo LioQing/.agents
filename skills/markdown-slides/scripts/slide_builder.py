@@ -204,7 +204,7 @@ def admonitions(tokens, parser):
         paragraph, inline, close = result[position + 1:position + 4]
         if paragraph.type != "paragraph_open" or inline.type != "inline" or close.type != "paragraph_close":
             continue
-        match = re.match(r"^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\](?:\n|$)", inline.content)
+        match = re.match(r"^\[!(NOTE|INFO|TIP|IMPORTANT|WARNING|CAUTION)\](?:\n|$)", inline.content)
         if not match:
             continue
         kind = match[1].lower()

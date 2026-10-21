@@ -44,7 +44,7 @@ Illustrative test deck, not a factual report.
 ---
 # Reading guidance
 
-> [!NOTE]
+> [!INFO]
 > Background stays close to the evidence.
 
 > [!TIP]
@@ -184,6 +184,28 @@ def check_control_bar(page, touch=False):
     assert page.evaluate("document.documentElement.scrollWidth") <= viewport["width"]
 
 
+def check_overview_panel(page):
+    # ResizeObserver updates the canvas after the grid allocates the panel's column.
+    page.wait_for_function("""() => {
+      const stage = document.querySelector('#stage').getBoundingClientRect();
+      const canvas = document.querySelector('#canvas-fit').getBoundingClientRect();
+      return canvas.left >= stage.left - 1 && canvas.right <= stage.right + 1
+        && canvas.top >= stage.top - 1 && canvas.bottom <= stage.bottom + 1;
+    }""")
+    stage = page.locator("#stage").bounding_box()
+    canvas = page.locator("#canvas-fit").bounding_box()
+    panel = page.locator("#overview").bounding_box()
+    bar = page.locator("#control-bar").bounding_box()
+    assert canvas["width"] > 0 and canvas["height"] > 0
+    assert stage["x"] + stage["width"] < panel["x"]
+    assert canvas["x"] + canvas["width"] < panel["x"]
+    assert panel["x"] + panel["width"] <= page.viewport_size["width"]
+    assert panel["y"] + panel["height"] <= bar["y"]
+    assert abs(canvas["width"] / canvas["height"] - 16 / 9) < .01
+    assert page.locator("#overview").evaluate("node => node.scrollWidth <= node.clientWidth")
+    check_control_bar(page, touch=page.viewport_size["width"] <= 640)
+
+
 def run(directory, executable):
     output, custom = create_deck(directory)
     results = []
@@ -225,9 +247,12 @@ def run(directory, executable):
         page.keyboard.press("ArrowLeft")
         assert page.locator(f"#{custom}").get_attribute("data-left") == "true"
         results.append("button/keyboard navigation and input isolation")
+        full_stage_width = page.locator("#stage").bounding_box()["width"]
         page.click("#overview-toggle")
         assert page.locator("#overview").is_visible()
         assert page.locator("#overview-toggle").get_attribute("aria-expanded") == "true"
+        check_overview_panel(page)
+        assert page.locator("#stage").bounding_box()["width"] < full_stage_width
         row = page.locator("#overview [data-go-slide]").nth(5)
         row.click()
         assert page.locator("#overview").is_visible()
@@ -250,6 +275,7 @@ def run(directory, executable):
         assert page.locator("#overview").is_hidden()
         assert page.locator("#overview-toggle").get_attribute("aria-expanded") == "false"
         assert page.evaluate("document.activeElement.id") == "overview-toggle"
+        assert abs(page.locator("#stage").bounding_box()["width"] - full_stage_width) <= 1
         page.click("#overview-toggle")
         page.keyboard.press("Escape")
         assert page.locator("#overview").is_hidden()
@@ -293,12 +319,20 @@ def run(directory, executable):
         problems = page.evaluate("SlideDeck.checkLayout()")
         assert not problems, problems
         page.evaluate("SlideDeck.goTo(3)")
+        info = page.locator(".admonition-info")
+        assert info.get_attribute("role") == "note"
+        assert info.locator(".admonition-title").inner_text() == "Info"
+        assert info.evaluate("node => getComputedStyle(node).borderTopColor") == "rgb(29, 78, 216)"
+        assert info.locator(".admonition-title").evaluate("node => getComputedStyle(node).color") == "rgb(29, 78, 216)"
         page.screenshot(path=str(directory / "admonitions-light.png"))
         page.click("#theme-toggle")
+        assert info.evaluate("node => getComputedStyle(node).borderTopColor") == "rgb(96, 165, 250)"
+        assert info.locator(".admonition-title").evaluate("node => getComputedStyle(node).color") == "rgb(96, 165, 250)"
         page.screenshot(path=str(directory / "admonitions-dark.png"))
         page.evaluate("SlideDeck.goTo(6)")
         page.screenshot(path=str(directory / "custom-slide-dark.png"))
         page.click("#overview-toggle")
+        check_overview_panel(page)
         page.screenshot(path=str(directory / "controls-overview-dark.png"))
         page.click("#overview-close")
         results.append("all-slide overflow/image checks and light/dark rendering")
@@ -314,6 +348,7 @@ def run(directory, executable):
         page.click("#overview-toggle")
         page.locator("#overview [data-go-slide]").first.click()
         assert page.locator("#overview").is_visible()
+        check_overview_panel(page)
         overview = page.locator("#overview").bounding_box()
         assert overview["y"] + overview["height"] <= page.locator("#control-bar").bounding_box()["y"]
         page.screenshot(path=str(directory / "controls-overview-mobile.png"))
@@ -322,8 +357,14 @@ def run(directory, executable):
             page.set_viewport_size({"width": width, "height": height})
             page.wait_for_timeout(100)
             check_control_bar(page, touch=width <= 640)
+            page.click("#overview-toggle")
+            check_overview_panel(page)
+            page.click("#overview-close")
+        page.click("#overview-toggle")
         results.append("mobile/tablet/landscape fitting, wrapped bar, overview, and touch targets")
         page.set_viewport_size({"width": 1440, "height": 900})
+        check_overview_panel(page)
+        results.append("non-overlapping right overview panel, canvas refitting, and full-width restoration")
         pdf = directory / "presentation.pdf"
         page.pdf(path=str(pdf), prefer_css_page_size=True, print_background=True)
         reader = PdfReader(pdf)

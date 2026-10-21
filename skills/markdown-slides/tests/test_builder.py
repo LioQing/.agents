@@ -53,13 +53,24 @@ class ParsingTests(unittest.TestCase):
         self.assertEqual(slide["instruction"], "")
         self.assertIn("instruction: literal content", slide["markup"])
 
-    def test_all_github_admonitions(self):
-        text = "# Alerts\n\n" + "\n\n".join(f"> [!{kind}]\n> **Bold** text.\n>\n> - Nested item" for kind in ("NOTE", "TIP", "IMPORTANT", "WARNING", "CAUTION"))
+    def test_all_supported_admonitions(self):
+        text = "# Alerts\n\n" + "\n\n".join(f"> [!{kind}]\n> **Bold** text.\n>\n> - Nested item" for kind in ("NOTE", "INFO", "TIP", "IMPORTANT", "WARNING", "CAUTION"))
         slide = builder.parse_slides(text)[0]
         soup = builder.BeautifulSoup(slide["markup"], "html.parser")
-        self.assertEqual(len(soup.select('aside[role="note"]')), 5)
-        self.assertEqual(len(soup.select(".admonition-body strong")), 5)
-        self.assertEqual(len(soup.select(".admonition-body li")), 5)
+        self.assertEqual(len(soup.select('aside[role="note"]')), 6)
+        self.assertEqual(len(soup.select(".admonition-body strong")), 6)
+        self.assertEqual(len(soup.select(".admonition-body li")), 6)
+        self.assertEqual(soup.select_one(".admonition-info > .admonition-title").get_text(), "Info")
+
+    def test_info_nesting_case_and_literal_code(self):
+        slide = builder.parse_slides("# Info\n\n> [!NOTE]\n> Outer\n>\n> > [!INFO]\n> > First line.\n> > Second line.\n\n> [!info]\n> Ordinary quote.\n\n```markdown\n> [!INFO]\n```\n")[0]
+        soup = builder.BeautifulSoup(slide["markup"], "html.parser")
+        info = soup.select_one(".admonition-note .admonition-info")
+        self.assertEqual(info["role"], "note")
+        self.assertIn("First line.\nSecond line.", info.select_one(".admonition-body").get_text())
+        self.assertEqual(len(soup.select("aside")), 2)
+        self.assertIn("[!info]", soup.blockquote.get_text())
+        self.assertIn("[!INFO]", soup.code.get_text())
 
     def test_nested_and_unknown_admonition(self):
         slide = builder.parse_slides("# One\n\n> [!NOTE]\n> Outer\n>\n> > [!TIP]\n> > Inner\n\n> [!CUSTOM]\n> ordinary\n\n```\n> [!WARNING]\n```\n")[0]
@@ -164,7 +175,9 @@ class DeckTests(unittest.TestCase):
         self.assertIsNotNone(controls.select_one("#navigation #previous-slide"))
         self.assertIsNotNone(controls.select_one("#utilities #overview-toggle"))
         self.assertIsNone(soup.select_one("#deck #control-bar"))
-        close = soup.select_one("#stage #overview #overview-header #overview-close")
+        self.assertIsNotNone(soup.select_one("body > main#stage + aside#overview"))
+        self.assertIsNone(soup.select_one("#stage #overview"))
+        close = soup.select_one("#overview #overview-header #overview-close")
         self.assertEqual(close["type"], "button")
         self.assertEqual(close["aria-label"], "Close slide overview")
 

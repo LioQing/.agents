@@ -15,6 +15,7 @@ colors:
   hover: "#fafafa"
   badge-surface: "#f4f4f5"
   callout-text: "#27272a"
+  info: "#1d4ed8"
   tip: "#1a7f37"
   important: "#8250df"
   success: "#047857"
@@ -53,6 +54,7 @@ colors:
   dark-hover: "#18181b"
   dark-badge-surface: "#18181b"
   dark-callout-text: "#e4e4e7"
+  dark-info: "#60a5fa"
   dark-tip: "#3fb950"
   dark-important: "#a371f7"
   dark-success: "#34d399"
@@ -203,8 +205,8 @@ components:
 
 - Charts retain blue-600 as the primary series and zinc-400 as the comparison series in both themes.
 - Blue chart fill is `#2563eb18`, not a gradient.
-- Note, Information, and Recommendation share the original neutral callout palette.
-- Tip uses GitHub-style green (`tip` / `dark-tip`), Important uses purple (`important` / `dark-important`), and Caution uses red (`danger` / `dark-danger`), matching the slide theme. Callout body text remains neutral.
+- Note and Recommendation share the original neutral callout palette.
+- Info uses blue (`info` / `dark-info`), Tip uses GitHub-style green (`tip` / `dark-tip`), Important uses purple (`important` / `dark-important`), and Caution uses red (`danger` / `dark-danger`). Callout body text remains neutral.
 - Status colors require explicit labels; do not rely on color alone.
 - Normal text meets 4.5:1 contrast; large text and meaningful focus indicators meet 3:1.
 - Boundary tokens describe outlines, not text colors.
@@ -442,7 +444,7 @@ Use the same geometry and neutral state language throughout the report. The API 
 
 ### Admonitions
 
-The Tip, Important, and Caution palettes below match the slide theme. Retain the shared report geometry and body text styling.
+All admonitions use the shared report geometry and body text styling, with the palettes below.
 
 | Shared property | Original pattern |
 | --- | --- |
@@ -455,7 +457,8 @@ The Tip, Important, and Caution palettes below match the slide theme. Retain the
 | Type | Palette | Icon |
 | --- | --- | --- |
 | Note | Original neutral | `info` |
-| Information / Recommendation | Original neutral | `info` |
+| Info | Blue label/icon/outline: `info` / `dark-info` | `info` |
+| Recommendation | Original neutral | `info` |
 | Tip | Green label/icon/outline: `tip` / `dark-tip` | `lightbulb` |
 | Important | Purple label/icon/outline: `important` / `dark-important` | `info` |
 | Success | Emerald label/icon/outline | `check_circle` |
@@ -463,7 +466,7 @@ The Tip, Important, and Caution palettes below match the slide theme. Retain the
 | Caution | Red label/icon: `danger` / `dark-danger`; outline: `danger-border` / `dark-danger-border` | `warning` |
 | Danger / Error | Red label/icon/outline | `error` |
 
-- Tip and Important outlines match their label/icon colors in both themes. Other semantic outlines use the light 300 / dark 900 status shades; body text remains neutral.
+- Info, Tip, and Important outlines match their label/icon colors in both themes. Other semantic outlines use the light 300 / dark 900 status shades; body text remains neutral.
 - Neutral labels use heading color, as in the original Recommendation.
 - Use success only for verified outcomes; keep caution and recommendation wording explicit.
 - Choose the admonition by its message: success for measured improvements, warning for unmet release conditions, tip for practical reading or planning advice, important for essential guidance, caution for serious risks, danger for harmful failure modes, and information for sources or definitions. Use these throughout the report where relevant rather than defaulting every callout to a neutral note.
