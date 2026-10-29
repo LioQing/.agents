@@ -1,6 +1,10 @@
 # Personal agent configurations
 
-Shared instructions (`AGENTS.md`) and skills (`skills/`). No clone needed to install.
+Shared instructions (`AGENTS.md`) and skills (`skills/`).
+
+> [!TIP]
+>
+> No clone needed to install. The commands download the files directly from GitHub.
 
 ## Install instructions and skills together
 
