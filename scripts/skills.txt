@@ -1,0 +1,9 @@
+# Source repository and skill name. Keep personal skills first, sorted by name.
+lioqing/.agents blender-workflow
+lioqing/.agents guided-learning
+lioqing/.agents html-report
+lioqing/.agents markdown-slides
+lioqing/.agents markdown-slides-prep
+petergyang/no-ai-slop no-ai-slop
+JuliusBrussee/caveman caveman
+mattpocock/skills grilling

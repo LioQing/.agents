@@ -1,15 +1,71 @@
 # Personal agent configurations
 
-My shared agent instructions (`AGENTS.md`) and reusable skills (`skills/`).
+Shared instructions (`AGENTS.md`) and skills (`skills/`). No clone needed to install.
 
-> [!TIP]
->
-> To install agent instructions or skills from this repository, no cloning is required.
-> The commands below can be run in your computer without downloading any files from this repository.
+## Install instructions and skills together
+
+Requires Node.js/npm (`npx`), PowerShell 5.0+ or Bash 3.2+, and an interactive ANSI terminal. Bash also needs `curl`.
+
+PowerShell:
+
+```powershell
+irm https://raw.githubusercontent.com/lioqing/.agents/master/scripts/install.ps1 | iex
+```
+
+Bash:
+
+```bash
+installer=$(curl -fsSL https://raw.githubusercontent.com/lioqing/.agents/master/scripts/install.sh) && bash -c "$installer"
+```
+
+From a clone:
+
+```powershell
+pwsh -File ./scripts/install.ps1
+```
+
+```bash
+bash ./scripts/install.sh
+```
+
+1. Select agents: Claude, Codex, and OpenCode (all selected by default).
+2. Select personal and external skills (all selected by default).
+3. Choose instruction backups (default) or no backups.
+4. Enter `y` or `yes` for each instruction overwrite; other answers skip it. Selected skills still install globally.
+
+Cancel any menu to install nothing. See menu controls below.
+
+## Personal skills
+
+| Skill | Description | Notes |
+| --- | --- | --- |
+| [blender-workflow](skills/blender-workflow/SKILL.md) | Creates and revises Blender scenes through Blender MCP, with organized collections, rendered previews, and versioned saves. | |
+| [guided-learning](skills/guided-learning/SKILL.md) | Teaches complex technical topics through interactive, step-by-step walkthroughs when you ask for a full lesson. | |
+| [html-report](skills/html-report/SKILL.md) | Builds single-page HTML reports with charts, diagrams, tables, light/dark mode, and section navigation. | |
+| [markdown-slides](skills/markdown-slides/SKILL.md) | Turns Markdown into HTML slide presentations with per-slide customization and edit-preserving rebuilds. | |
+| [markdown-slides-prep](skills/markdown-slides-prep/SKILL.md) | Organizes conversations, notes, outlines, or documents into reviewable Markdown slide sources for markdown-slides. | Requires `markdown-slides`. |
+
+## External skills
+
+| Skill | Source | Description |
+| --- | --- | --- |
+| no-ai-slop | [petergyang/no-ai-slop](https://github.com/petergyang/no-ai-slop) | Edits drafts for clearer, more natural writing while preserving the author's voice, or checks for AI-like writing patterns. |
+| caveman | [JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman) | Compresses responses to reduce token usage while preserving technical accuracy. |
+| grilling | [mattpocock/skills](https://github.com/mattpocock/skills) | Stress-tests plans and ideas with questions about assumptions and gaps. |
+
+Install individually:
+
+```sh
+npx skills add petergyang/no-ai-slop --skill no-ai-slop --global --yes --agent claude-code codex opencode
+npx skills add JuliusBrussee/caveman --skill caveman --global --yes --agent claude-code codex opencode
+npx skills add mattpocock/skills --skill grilling --global --yes --agent claude-code codex opencode
+```
+
+Remove unwanted agent names to install for fewer targets.
 
 ## Install skills
 
-Requires Node.js/npm:
+Requires Node.js/npm (`npx`):
 
 ```sh
 npx skills add lioqing/.agents
@@ -19,22 +75,13 @@ Choose skills and agents when prompted.
 
 ## Install agent instructions
 
-Installers download `AGENTS.md` from GitHub.
-Review the scripts before running them.
+Requires PowerShell 5.0+ or Bash 3.2+ with `curl`. Instructions download from GitHub.
 
-PowerShell 5.0+:
+PowerShell:
 
 ```powershell
 irm https://raw.githubusercontent.com/lioqing/.agents/master/scripts/install-agents.ps1 | iex
 ```
-
-> [!NOTE]
-> If Windows PowerShell reports "Could not create SSL/TLS secure channel,"
-> enable TLS 1.2, then retry:
->
-> ```powershell
-> [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
-> ```
 
 Bash:
 
@@ -42,10 +89,7 @@ Bash:
 installer=$(curl -fsSL https://raw.githubusercontent.com/lioqing/.agents/master/scripts/install-agents.sh) && bash -c "$installer"
 ```
 
-Use `bash -c`, not `curl | bash`, so prompts can read standard input.
-The command runs only if the download succeeds.
-
-From a clone or downloaded script:
+From a clone:
 
 ```powershell
 pwsh -File ./scripts/install-agents.ps1
@@ -55,8 +99,9 @@ pwsh -File ./scripts/install-agents.ps1
 bash ./scripts/install-agents.sh
 ```
 
-- PowerShell: arrow-key multi-select.
-- Bash: numbered menu with one agent, **All three**, **Custom path**, or **Cancel**.
+1. Select destinations: PowerShell uses multi-select; Bash offers one agent, **All three**, or **Custom path**.
+2. Choose backups or no backups (PowerShell defaults to backups).
+3. Enter `y` or `yes` for each overwrite; other answers skip that file. Cancelling a menu changes nothing.
 
 Default destinations:
 
@@ -66,29 +111,14 @@ Default destinations:
 | Codex | `~/.codex/AGENTS.md` |
 | OpenCode | `~/.config/opencode/AGENTS.md` |
 
-Skip the destination menu with a custom file:
-
-```powershell
-pwsh -File ./scripts/install-agents.ps1 -Destination /desired/path/AGENTS.md
-```
-
-```bash
-bash ./scripts/install-agents.sh /desired/path/AGENTS.md
-```
-
-- A second menu lists existing files and asks whether to back them up.
-- The choice applies to all destinations, including custom paths.
-- PowerShell defaults to backup; Bash requires a number and Enter.
-- Cancelling either menu changes nothing and downloads no instructions.
-
-Skip the backup menu with these mutually exclusive options:
+Backup options (choose one):
 
 | Mode | PowerShell | Bash |
 | --- | --- | --- |
 | Back up | `-Backup` | `--backup` |
 | No backup | `-NoBackup` | `--no-backup` |
 
-Specify a destination too to skip both menus. Overwrite confirmation still applies:
+Skip both menus with a custom destination and backup option; overwrites still need confirmation:
 
 ```powershell
 pwsh -File ./scripts/install-agents.ps1 -Destination /desired/path/AGENTS.md -Backup
@@ -98,19 +128,9 @@ pwsh -File ./scripts/install-agents.ps1 -Destination /desired/path/AGENTS.md -Ba
 bash ./scripts/install-agents.sh --backup /desired/path/AGENTS.md
 ```
 
-- Bash accepts options before or after the destination; use `--` before paths starting with `-`.
-- Instructions come from remote `master`, even when running from a clone.
-- Override with `AGENTS_REF` (branch, tag, or commit) or PowerShell's `-Ref`.
-- To pin both scripts and instructions, replace `master` in the URL and set `AGENTS_REF` to the same ref.
-
-Safety:
-
-- Missing parent directories are created; directories and symbolic links are never overwritten.
-- Overwriting requires `y` or `yes`, regardless of backup mode; other answers skip that file.
-- Backups use `<filename>.backup-<timestamp>-<unique suffix>` beside the original.
-- Failed or empty downloads leave destinations unchanged; temporary downloads are cleaned up.
-
 ## Development: import local files
+
+Requires a clone. See shell and terminal requirements below.
 
 ### Import installed skills
 
@@ -122,22 +142,15 @@ pwsh -File ./scripts/import-skills.ps1
 bash ./scripts/import-skills.sh
 ```
 
-- Select skills containing `SKILL.md` from `~/.agents/skills` to import into `skills/`.
-- Choose **Copy** (default, keeps originals) or **Move**. Cancelling changes nothing.
-- Existing repo skill directories can be selected. Each replacement requires `y` or `yes` and creates a `<skill>.backup-<timestamp>-<unique suffix>` directory beside the original.
-- Replacements copy the entire skill, not merge it. Repo files and symbolic links remain unavailable.
-- Copies include hidden files and resources, following symbolic links for self-contained copies.
-- All selected copies are staged before replacing any repo skills. Failed copies leave existing skills and originals untouched.
-- Move removes imported originals only after all imports succeed. Declined replacements keep their originals. Links and junctions are removed without deleting their targets.
-- Failed removals may leave originals behind. Review and remove backup directories before committing or installing skills.
+1. Select skills from `~/.agents/skills` to import into `skills/`.
+2. Choose **Copy** (default, keeps originals) or **Move** (removes originals after successful imports).
+3. Enter `y` or `yes` to replace an existing skill with a backup; other answers skip it. Cancel either menu to change nothing.
 
 Review, commit, and push imports, then update installed skills:
 
 ```sh
 npx skills add lioqing/.agents --global
 ```
-
-The script displays this command but never runs it. Push first, then choose skills and agents when prompted.
 
 ### Import agent instructions
 
@@ -149,14 +162,12 @@ pwsh -File ./scripts/import-agents.ps1
 bash ./scripts/import-agents.sh
 ```
 
-- Choose one Claude, Codex, or OpenCode file to copy into the repo's `AGENTS.md`.
-- Missing sources are unavailable.
-- Replacing an existing repo file requires confirmation and creates a backup.
-- Files are copied verbatim, not merged.
+1. Choose one available Claude, Codex, or OpenCode file to copy into the repo's `AGENTS.md`.
+2. Confirm replacement to back up and overwrite the existing file.
 
 ## Menu controls and requirements
 
-Import scripts and the PowerShell installer use arrow-key menus:
+Import scripts, combined installers, and the PowerShell instruction installer:
 
 | Key | Action |
 | --- | --- |
@@ -165,32 +176,24 @@ Import scripts and the PowerShell installer use arrow-key menus:
 | Enter | Confirm; multi-select needs at least one choice |
 | Esc or q | Cancel |
 
-`[-]` means unavailable; `[x]` means selected.
-Bash imports also accept **j/k**; on Bash 3.2, **Esc** may take one second, while **q** is immediate.
+`[-]` means unavailable; `[x]` means selected. Bash imports also accept **j/k**.
 
-The Bash installer uses numbers followed by Enter; choose **Cancel** or enter **q** to quit.
+The Bash instruction-only installer uses numbers, then Enter; choose **Cancel** or enter **q** to quit.
 
 - PowerShell: **5.0+**; replace `pwsh` with `powershell` on Windows PowerShell 5.x.
-- Bash: **3.2+**, `cp`, `mkdir`, `mv`, `rm`, `mktemp`, and `date` (macOS, Linux, WSL, or Git Bash).
-  Installation also needs `curl` and `mktemp`.
-- Arrow-key menus need an interactive ANSI terminal with no redirected input/output, including custom-path installs without a backup option. Recommended size: 80 × 15.
-- No external menu package is needed.
-- Paths use the current user's home (Linux home under WSL). Import scripts find the repo from their own location.
-- Scripts never install skills or commit automatically; only **Move** deletes originals.
-- Failed imports may leave some destinations updated. Inspect before retrying; review imports and backups before committing.
+- Bash: **3.2+**, `cp`, `mkdir`, `mv`, `rm`, `mktemp`, and `date` (macOS, Linux, WSL, or Git Bash); installers also need `curl`.
+- Arrow-key menus: interactive ANSI terminal, no redirected input/output. Recommended size: 80 × 15.
+- Skill installation: Node.js/npm (`npx`).
 
 ## Tests
 
-Tests use temporary homes and repo copies; personal files are untouched:
+Requires PowerShell 5.0+, or Python 3 on macOS/Linux/WSL for Bash tests.
 
 ```powershell
 pwsh -File ./tests/test-scripts.ps1
+pwsh -File ./tests/test-install.ps1
 ```
 
 ```bash
 python3 ./tests/test_bash.py
 ```
-
-- PowerShell tests mock keyboard input; Bash tests run menus in a pseudo-terminal.
-- Downloads are mocked; no GitHub access is needed.
-- Bash tests require macOS/Linux/WSL and Python 3.

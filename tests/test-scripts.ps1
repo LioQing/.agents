@@ -367,6 +367,15 @@ function Invoke-WebRequest {
     $indexes = @(& $actualMenu -Title 'Unavailable test' -Items @($menuItems[0]))
     Assert-True ($indexes.Count -eq 0) 'real menu handles no enabled choices'
 
+    $global:Keys = @('Enter')
+    $global:KeyIndex = 0
+    $indexes = @(& $actualMenu -Title 'Select all default test' -Items $menuItems -Multiple -DefaultAll)
+    Assert-True (($indexes -join ',') -eq '1,2') 'default-all selects only enabled choices'
+    $global:Keys = @('DownArrow', 'Spacebar', 'Enter')
+    $global:KeyIndex = 0
+    $indexes = @(& $actualMenu -Title 'Deselect default test' -Items $menuItems -Multiple -DefaultAll)
+    Assert-True (($indexes -join ',') -eq '2') 'default selections can be toggled off'
+
     $global:Keys = @('Spacebar', 'DownArrow', 'Spacebar', 'Enter')
     $global:KeyIndex = 0
     $indexes = @(& $actualInstallerMenu -Title 'Standalone installer menu test' -Items $menuItems[1..2] -Multiple)

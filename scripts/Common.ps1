@@ -14,7 +14,8 @@ function Select-ArrowMenu {
     param(
         [Parameter(Mandatory)][string]$Title,
         [Parameter(Mandatory)][object[]]$Items,
-        [switch]$Multiple
+        [switch]$Multiple,
+        [switch]$DefaultAll
     )
 
     # Each item has Label and Enabled properties. Return zero-based indexes.
@@ -27,6 +28,9 @@ function Select-ArrowMenu {
 
     $cursor = 0
     $selected = New-Object 'bool[]' $Items.Count
+    if ($Multiple -and $DefaultAll) {
+        for ($i = 0; $i -lt $Items.Count; $i++) { $selected[$i] = [bool]$Items[$i].Enabled }
+    }
     $rows = 0
     $escape = [char]27
     $width = 80

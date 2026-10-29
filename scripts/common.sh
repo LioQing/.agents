@@ -10,9 +10,10 @@ require_terminal() {
 
 # Inputs: MENU_LABELS and MENU_ENABLED (1 = selectable, 0 = unavailable).
 # Output: MENU_RESULT, containing selected zero-based indexes.
+# Optional third argument selects all enabled items initially in multi-select menus.
 # Returns 1 on cancellation. Bash 3.2 compatible; no external menu package.
 select_menu() {
-    local title=$1 multiple=$2 count=${#MENU_LABELS[@]}
+    local title=$1 multiple=$2 default_all=${3:-0} count=${#MENU_LABELS[@]}
     local cursor=0 i start end rows=0 key suffix mark pointer line
     local width=${COLUMNS:-80} selected=() available=0 key_timeout=0.1
 
@@ -22,6 +23,7 @@ select_menu() {
     MENU_RESULT=()
     for ((i=0; i<count; i++)); do
         selected[i]=0
+        if [[ $multiple == 1 && $default_all == 1 && ${MENU_ENABLED[i]} == 1 ]]; then selected[i]=1; fi
         [[ ${MENU_ENABLED[i]} == 1 ]] && available=$((available + 1))
     done
 

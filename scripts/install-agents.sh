@@ -15,13 +15,13 @@ copy_instructions() {
 
         if [[ $make_backup == 1 ]]; then
             backup=$(mktemp "${destination}.backup-$(date +%Y%m%d-%H%M%S)-XXXXXXXX")
-            cp -p "$destination" "$backup"
+            cp -p -- "$destination" "$backup"
             printf 'Backup: %s\n' "$backup"
         fi
     fi
 
-    mkdir -p "$(dirname "$destination")"
-    cp "$source" "$destination"
+    mkdir -p -- "$(dirname -- "$destination")"
+    cp -- "$source" "$destination"
     printf 'Copied to %s\n' "$destination"
 }
 
@@ -44,10 +44,10 @@ main() {
         esac
         shift
     done
-    [[ ${#selected[@]} -le 1 ]] || die 'Usage: install-agents.sh [--backup | --no-backup] [--] [destination-file]'
-
-    if [[ ${#selected[@]} == 1 ]]; then
-        [[ -n ${selected[0]} ]] || die 'The destination cannot be empty.'
+    if [[ ${#selected[@]} -gt 0 ]]; then
+        for destination in "${selected[@]}"; do
+            [[ -n $destination ]] || die 'The destination cannot be empty.'
+        done
     else
         printf 'Install GitHub instructions. Choose a destination by number.\n'
         # select/read use stdin. For remote execution use bash -c "$(curl ...)",

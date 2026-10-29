@@ -35,23 +35,42 @@ set -e
 while (($#)); do
     case "$1" in
         -o) destination=$2; shift 2;;
-        https://*) printf '%s\\n' "$1" > "$FAKE_CURL_LOG"; shift;;
+        https://*) url=$1; printf '%s\\n' "$1" > "$FAKE_CURL_LOG"; shift;;
         *) shift;;
     esac
 done
 [[ ${FAKE_CURL_EXIT:-0} == 0 ]] || exit "$FAKE_CURL_EXIT"
+[[ -z ${FAKE_CURL_FAIL_MATCH:-} || $url != *"$FAKE_CURL_FAIL_MATCH" ]] || exit 22
 if [[ ${FAKE_CURL_EMPTY:-0} == 1 ]]; then
     : > "$destination"
+elif [[ $url == */scripts/* ]]; then
+    cp "$FAKE_CURL_SCRIPTS/${url##*/}" "$destination"
 else
     cp "$FAKE_CURL_CONTENT" "$destination"
 fi
 printf '%s\\n' "$destination" >> "$FAKE_CURL_LOG"
+printf '%s\\t%s\\n' "$url" "$destination" >> "$FAKE_CURL_REQUESTS"
 ''')
         (self.bin / "curl").chmod(0o755)
+        self.write(self.bin / "npx", '''#!/usr/bin/env bash
+case " $* " in
+    *" --agent "*) ;;
+    *) printf 'PromptScript: PromptScript does not support global skill installation\\n' >&2; exit 1;;
+esac
+printf '%s\\t' "$@" >> "$FAKE_NPX_LOG"
+printf '\\n' >> "$FAKE_NPX_LOG"
+for argument in "$@"; do
+    [[ $argument != "${FAKE_NPX_FAIL:-}" ]] || exit 7
+done
+''')
+        (self.bin / "npx").chmod(0o755)
         self.env = dict(
             os.environ, HOME=str(self.home), TERM="xterm", COLUMNS="100",
             PATH=str(self.bin) + os.pathsep + os.environ["PATH"],
             FAKE_CURL_CONTENT=str(self.payload), FAKE_CURL_LOG=str(self.root / "curl.log"),
+            FAKE_CURL_SCRIPTS=str(self.repo / "scripts"),
+            FAKE_CURL_REQUESTS=str(self.root / "curl-requests.log"),
+            FAKE_NPX_LOG=str(self.root / "npx.log"),
             AGENTS_REF="test-ref",
         )
 
@@ -92,8 +111,12 @@ printf '%s\\n' "$destination" >> "$FAKE_CURL_LOG"
                         except OSError:
                             break
                     break
-            self.assertIsNotNone(process.poll(), output.decode(errors="replace"))
-            self.assertEqual(process.wait(), expected_exit, output.decode(errors="replace"))
+            # A PTY may reach EOF just before the child reports its exit status.
+            try:
+                returncode = process.wait(timeout=max(0, deadline - time.monotonic()))
+            except subprocess.TimeoutExpired:
+                self.fail(output.decode(errors="replace"))
+            self.assertEqual(returncode, expected_exit, output.decode(errors="replace"))
             return output.decode(errors="replace")
         finally:
             if process.poll() is None:
@@ -117,6 +140,150 @@ printf '%s\\n' "$destination" >> "$FAKE_CURL_LOG"
         log = (self.root / "curl.log").read_text().splitlines()
         self.assertEqual(log[0], "https://raw.githubusercontent.com/lioqing/.agents/test-ref/AGENTS.md")
         self.assertFalse(Path(log[1]).parent.exists(), "download temporary directory is cleaned up")
+
+    def npx_commands(self):
+        return [line.rstrip("\t").split("\t") for line in (self.root / "npx.log").read_text().splitlines()]
+
+    @staticmethod
+    def option_values(args, option):
+        values = []
+        for value in args[args.index(option) + 1:]:
+            if value.startswith("-"):
+                break
+            values.append(value)
+        return values
+
+    def test_catalog_covers_personal_skills(self):
+        root = Path(__file__).resolve().parents[1]
+        entries = [line.split() for line in (root / "scripts/skills.txt").read_text().splitlines() if line.strip() and not line.lstrip().startswith("#")]
+        personal = {skill for source, skill in entries if source == "lioqing/.agents"}
+        self.assertEqual(personal, {path.parent.name for path in (root / "skills").glob("*/SKILL.md")})
+        self.assertEqual(len(entries), len(set(map(tuple, entries))), "catalog entries are unique")
+
+    def test_combined_defaults_select_all(self):
+        output = self.run_script("install.sh", b"\n\n\n")
+        self.assertIn("[x] Claude:", output)
+        self.assertIn("[x] blender-workflow (personal", output)
+        self.assertIn("[x] grilling (external", output)
+        self.assertLess(output.index("Choose target agents for instructions and skills"), output.index("Choose personal and external skills"))
+        for relative in (".claude/CLAUDE.md", ".codex/AGENTS.md", ".config/opencode/AGENTS.md"):
+            self.assertEqual((self.home / relative).read_text(), "remote instructions\n")
+        commands = self.npx_commands()
+        self.assertEqual(len(commands), 4)
+        self.assertEqual(commands[0], ["skills", "add", "https://github.com/lioqing/.agents/tree/test-ref", "--skill", "blender-workflow", "guided-learning", "html-report", "markdown-slides", "markdown-slides-prep", "--global", "--yes", "--agent", "claude-code", "codex", "opencode"])
+        self.assertEqual(commands[1], ["skills", "add", "petergyang/no-ai-slop", "--skill", "no-ai-slop", "--global", "--yes", "--agent", "claude-code", "codex", "opencode"])
+        for args in commands:
+            self.assertEqual(self.option_values(args, "--agent"), ["claude-code", "codex", "opencode"])
+        self.assertEqual(commands[-1][2:5], ["mattpocock/skills", "--skill", "grilling"])
+
+    def test_combined_deselect_and_no_backup(self):
+        codex = self.home / ".codex/AGENTS.md"
+        self.write(codex, "old Codex")
+        # Keep only Codex instructions and the last two external skills.
+        output = self.run_script("install.sh", b" jj \n" + b" j" * 6 + b"\nj\ny\n")
+        self.assertFalse((self.home / ".claude").exists())
+        self.assertFalse((self.home / ".config/opencode").exists())
+        self.assertEqual(codex.read_text(), "remote instructions\n")
+        self.assertEqual(list(codex.parent.glob("*.backup-*")), [])
+        self.assertEqual([args[4] for args in self.npx_commands()], ["caveman", "grilling"])
+        for args in self.npx_commands():
+            self.assertEqual(self.option_values(args, "--agent"), ["codex"])
+        self.assertIn(str(codex), output)
+
+    def test_combined_noncontiguous_skill_targets(self):
+        self.write(self.root / "promptscript.yaml", "# Project-only agent must not be selected\n")
+        self.run_script("install.sh", b"j \n\n\n")
+        self.assertFalse((self.home / ".codex").exists())
+        for args in self.npx_commands():
+            self.assertEqual(self.option_values(args, "--agent"), ["claude-code", "opencode"])
+
+    def test_combined_batches_only_selected_skills(self):
+        # Keep personal skills 0 and 2, plus external skills 5 and 7.
+        self.run_script("install.sh", b"\nj jj j jj \n\n")
+        commands = self.npx_commands()
+        self.assertEqual(len(commands), 3)
+        self.assertEqual(self.option_values(commands[0], "--skill"), ["blender-workflow", "html-report"])
+        self.assertEqual([args[2] for args in commands[1:]], ["petergyang/no-ai-slop", "mattpocock/skills"])
+
+    def test_combined_batches_interleaved_catalog(self):
+        catalog = self.repo / "scripts/skills.txt"
+        rows = [line for line in catalog.read_text().splitlines() if line and not line.startswith("#")]
+        catalog.write_text("\n".join(rows[i] for i in (0, 5, 1, 6, 2, 7, 3, 4)) + "\n")
+        self.run_script("install.sh", b"\n\n\n")
+        commands = self.npx_commands()
+        self.assertEqual(len(commands), 4, "one command per source even when catalog rows are interleaved")
+        self.assertEqual(self.option_values(commands[0], "--skill"), ["blender-workflow", "guided-learning", "html-report", "markdown-slides", "markdown-slides-prep"])
+
+    def test_combined_backup_and_decline(self):
+        claude = self.home / ".claude/CLAUDE.md"
+        self.write(claude, "old Claude")
+        self.run_script("install.sh", b"\n\n\ny\n")
+        backups = list(claude.parent.glob("*.backup-*"))
+        self.assertEqual(len(backups), 1)
+        self.assertEqual(backups[0].read_text(), "old Claude")
+        self.write(claude, "keep Claude")
+        self.run_script("install.sh", b"\n\n\nn\nn\nn\n")
+        self.assertEqual(claude.read_text(), "keep Claude")
+        self.assertEqual(len(self.npx_commands()), 8, "declining overwrites does not skip skill batches")
+
+    def test_combined_cancel_each_menu(self):
+        for keys in (b"q", b"\nq", b"\n\nq"):
+            with self.subTest(keys=keys):
+                output = self.run_script("install.sh", keys)
+                self.assertIn("Cancelled. Nothing installed.", output)
+                self.assertFalse((self.home / ".claude").exists())
+                self.assertFalse((self.root / "npx.log").exists())
+                self.assertFalse((self.root / "curl.log").exists())
+
+    def test_combined_npx_failure_stops(self):
+        self.env["FAKE_NPX_FAIL"] = "guided-learning"
+        output = self.run_script("install.sh", b"\n\n\n", expected_exit=1)
+        self.assertIn("Skill installation failed:", output)
+        self.assertIn("guided-learning", output)
+        self.assertEqual(len(self.npx_commands()), 1, "failure within first batch stops later sources")
+        self.assertIn("guided-learning", self.option_values(self.npx_commands()[0], "--skill"))
+
+    def test_combined_instruction_failure_skips_skills(self):
+        self.env["FAKE_CURL_EXIT"] = "22"
+        self.run_script("install.sh", b"\n\n\n", expected_exit=1)
+        self.assertFalse((self.root / "npx.log").exists())
+        self.assertFalse((self.home / ".claude").exists())
+
+    def test_combined_remote_bootstrap(self):
+        script = (self.repo / "scripts/install.sh").read_text()
+        self.run_script("install.sh", b"\n\n\n", command=["bash", "-c", script])
+        requests = [line.split("\t") for line in (self.root / "curl-requests.log").read_text().splitlines()]
+        self.assertEqual(len(requests), 4)
+        self.assertEqual(requests[0][0], "https://raw.githubusercontent.com/lioqing/.agents/test-ref/scripts/common.sh")
+        self.assertFalse(Path(requests[0][1]).parent.exists(), "bootstrap helpers cleaned up")
+        self.assertEqual(len(self.npx_commands()), 4)
+
+    def test_combined_remote_bootstrap_failure_cleanup(self):
+        script = (self.repo / "scripts/install.sh").read_text()
+        self.env["FAKE_CURL_FAIL_MATCH"] = "/skills.txt"
+        result = subprocess.run(["bash", "-c", script], capture_output=True, text=True, env=self.env)
+        self.assertNotEqual(result.returncode, 0)
+        requests = (self.root / "curl-requests.log").read_text().splitlines()
+        self.assertFalse(Path(requests[0].split("\t")[1]).parent.exists())
+        self.assertFalse((self.root / "npx.log").exists())
+
+    def test_combined_remote_cancel_cleanup(self):
+        script = (self.repo / "scripts/install.sh").read_text()
+        self.run_script("install.sh", b"\nq", command=["bash", "-c", script])
+        requests = (self.root / "curl-requests.log").read_text().splitlines()
+        self.assertEqual(len(requests), 3, "only helpers are downloaded before cancellation")
+        self.assertFalse(Path(requests[0].split("\t")[1]).parent.exists())
+        self.assertFalse((self.root / "npx.log").exists())
+
+    def test_combined_remote_empty_helper_cleanup(self):
+        script = (self.repo / "scripts/install.sh").read_text()
+        self.env["FAKE_CURL_EMPTY"] = "1"
+        result = subprocess.run(["bash", "-c", script], capture_output=True, text=True, env=self.env)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("Downloaded common.sh is empty", result.stderr)
+        requests = (self.root / "curl-requests.log").read_text().splitlines()
+        self.assertFalse(Path(requests[0].split("\t")[1]).parent.exists())
+        self.assertFalse((self.root / "npx.log").exists())
 
     def test_decline_and_cancel(self):
         claude = self.home / ".claude/CLAUDE.md"
@@ -245,8 +412,8 @@ printf '%s\\n' "$destination" >> "$FAKE_CURL_LOG"
             ["--backup", "--no-backup", str(destination)],
             ["--no-backup", "--backup", str(destination)],
             ["--unknown", str(destination)],
-            ["--backup", str(destination), "extra.md"],
             ["--no-backup", ""],
+            ["--backup", str(destination), ""],
         ):
             with self.subTest(arguments=arguments):
                 result = subprocess.run(
@@ -257,6 +424,21 @@ printf '%s\\n' "$destination" >> "$FAKE_CURL_LOG"
                 self.assertEqual(destination.read_text(), "unchanged")
                 self.assertFalse((self.root / "curl.log").exists())
                 self.assertEqual(list(destination.parent.glob("*.backup-*")), [])
+
+    def test_install_explicit_multiple_destinations(self):
+        destinations = [self.home / "first/AGENTS.md", self.home / "second/AGENTS.md"]
+        for destination in destinations:
+            self.write(destination, "original instructions")
+        result = subprocess.run(
+            ["bash", str(self.repo / "scripts/install-agents.sh"), "--backup", *map(str, destinations)],
+            input="y\ny\n", text=True, capture_output=True, env=self.env,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        for destination in destinations:
+            self.assertEqual(destination.read_text(), "remote instructions\n")
+            backups = list(destination.parent.glob("*.backup-*"))
+            self.assertEqual(len(backups), 1)
+            self.assertEqual(backups[0].read_text(), "original instructions")
 
     def test_download_failure_and_empty_response_leave_destinations_alone(self):
         destination = self.home / ".codex/AGENTS.md"
